@@ -19,6 +19,7 @@ import {
   Wifi,
   WifiOff,
   TrendingUp,
+  LogOut,
 } from "lucide-react"
 import {
   getUserProfiles,
@@ -537,13 +538,24 @@ export default function UnderwritingApp() {
                       )}
                       
                       {/* Footer info */}
-                      <div className="p-2 bg-gray-50">
-                        {swaUser && (
-                          <p className="text-xs text-gray-600 px-2 font-medium truncate">{swaUser.name}</p>
+                      <div className="p-2 bg-gray-50 space-y-1">
+                        {swaUser ? (
+                          <>
+                            <p className="text-xs text-gray-600 px-2 font-medium truncate">{swaUser.name}</p>
+                            <p className="text-xs text-gray-400 px-2 truncate">{swaUser.email}</p>
+                            <a
+                              href="/.auth/logout"
+                              className="flex items-center gap-1.5 px-2 py-1 text-xs text-red-500 hover:text-red-600 transition-colors"
+                            >
+                              <LogOut className="w-3 h-3" />
+                              Sign out
+                            </a>
+                          </>
+                        ) : (
+                          <p className="text-xs text-gray-400 px-2">
+                            {isMockMode ? "Using demo data" : "Connected to live API"}
+                          </p>
                         )}
-                        <p className="text-xs text-gray-400 px-2">
-                          {swaUser ? swaUser.email : isMockMode ? "Using demo data" : "Connected to live API"}
-                        </p>
                       </div>
                     </div>
                   </>
