@@ -106,12 +106,12 @@ export function DiffBadge({
 // ─── Example Scenarios ──────────────────────────────────────────────────────
 
 const exampleScenarios = [
-  { label: "Max 401(k)", scenario: "I maximize my 401k contributions" },
-  { label: "+5% savings", scenario: "I increase my savings rate by 5%" },
+  { label: "Max Commercial", scenario: "I maximize my commercial policy coverage" },
+  { label: "+5% premium", scenario: "I increase my premium by 5%" },
   { label: "Market crash", scenario: "There is a 20% market crash" },
-  { label: "Stop contributing", scenario: "I stop all retirement contributions" },
-  { label: "Add Roth IRA", scenario: "I add $500/month to my Roth IRA" },
-  { label: "Early retirement", scenario: "I retire 5 years earlier than planned" },
+  { label: "Stop premiums", scenario: "I stop all premium contributions" },
+  { label: "Add Whole Life", scenario: "I add $500/month to my whole life policy" },
+  { label: "Early reassessment", scenario: "I reassess my coverage 5 years earlier than planned" },
 ]
 
 // ─── Main Component ─────────────────────────────────────────────────────────
@@ -326,7 +326,7 @@ export const ScenarioProjectionOverlay: React.FC<ScenarioProjectionOverlayProps>
                 value={scenarioInput}
                 onChange={(e) => setScenarioInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Describe your scenario... (e.g., 'I increase my 401k contribution to 15%')"
+                placeholder="Describe your scenario... (e.g., 'I increase my commercial policy premium by 15%')"
                 className="w-full px-4 py-3 pr-12 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent placeholder:text-gray-400"
                 disabled={isLoading}
               />
@@ -452,13 +452,13 @@ export const ScenarioProjectionOverlay: React.FC<ScenarioProjectionOverlayProps>
                     </div>
                   </div>
                   <div className="p-2 bg-gray-50 rounded-lg">
-                    <div className="text-[10px] text-gray-400 font-medium">401(k) Limit</div>
+                    <div className="text-[10px] text-gray-400 font-medium">Commercial Limit</div>
                     <div className="text-sm font-semibold text-gray-900">
                       ${projection.assumptions.contribution_limit_401k.toLocaleString()}
                     </div>
                   </div>
                   <div className="p-2 bg-gray-50 rounded-lg">
-                    <div className="text-[10px] text-gray-400 font-medium">IRA Limit</div>
+                    <div className="text-[10px] text-gray-400 font-medium">Life Policy Limit</div>
                     <div className="text-sm font-semibold text-gray-900">
                       ${projection.assumptions.contribution_limit_ira.toLocaleString()}
                     </div>

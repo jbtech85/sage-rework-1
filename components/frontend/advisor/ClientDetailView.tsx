@@ -92,7 +92,7 @@ const MOCK_CONVERSATIONS: ConversationSummary[] = [
     title: "Tax Optimization Discussion",
     message_count: 8,
     last_message_at: "2026-02-05T10:15:00Z",
-    summary: "Discussed Roth conversion strategy. Client interested in converting portion of traditional IRA."
+    summary: "Discussed whole life policy upgrade. Applicant interested in converting portion of term life coverage."
   },
   {
     id: "conv-3",
@@ -193,8 +193,8 @@ const MOCK_ESCALATIONS: EscalationTicket[] = [
     client_id: "demo-user",
     advisor_id: "advisor-jane",
     reason: "regulatory_question",
-    client_question: "Can I contribute to both Roth IRA and 401k if I exceed income limits?",
-    context_summary: "Client has income near Roth IRA phase-out threshold. Needs guidance on backdoor Roth strategy.",
+    client_question: "Can I hold both a commercial policy and whole life policy given my current coverage limits?",
+    context_summary: "Applicant has coverage near the individual policy threshold. Needs guidance on dual-policy eligibility.",
     status: "pending",
     priority: "medium",
     created_at: "2026-02-10T11:00:00Z"

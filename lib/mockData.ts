@@ -466,10 +466,10 @@ export function generateMockProjection(
   if (scenario.includes("stop") && scenario.includes("contribution")) {
     contributionBoost = -0.03 * timeMultiplier
   }
-  if (scenario.includes("roth") || scenario.includes("ira")) {
+  if (scenario.includes("whole life") || scenario.includes("term")) {
     contributionBoost += 0.01 * timeMultiplier
   }
-  if (scenario.includes("401k") || scenario.includes("401(k)")) {
+  if (scenario.includes("commercial") || scenario.includes("commercial policy")) {
     contributionBoost += 0.015 * timeMultiplier
   }
 
@@ -479,12 +479,11 @@ export function generateMockProjection(
 
   // Project accounts
   const projectedAccounts = current_portfolio.accounts.map((acc) => {
-    // 401k and Roth get extra boost from contribution scenarios
     let accountBoost = marketReturn + contributionBoost
-    if (acc.name.includes("401") && scenario.includes("401")) {
+    if (acc.name.includes("Commercial") && scenario.includes("commercial")) {
       accountBoost += 0.02 * timeMultiplier
     }
-    if (acc.name.includes("Roth") && scenario.includes("roth")) {
+    if (acc.name.includes("Whole Life") && scenario.includes("whole life")) {
       accountBoost += 0.015 * timeMultiplier
     }
 
@@ -630,8 +629,8 @@ export function generateMockProjection(
     assumptions: {
       market_return_annual: 0.07,
       inflation_rate: 0.025,
-      contribution_limit_401k: 23000,
-      contribution_limit_ira: 7000,
+      contribution_limit_401k: 50000,
+      contribution_limit_ira: 25000,
     },
     headline,
     summary,

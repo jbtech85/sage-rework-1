@@ -7,7 +7,7 @@ export type AccountIconType = "building" | "shield" | "trending-up" | "wallet" |
 export interface Account {
   id: string
   name: string
-  type: "401k" | "roth_ira" | "ira" | "brokerage" | "hsa"
+  type: "commercial_policy" | "whole_life" | "term_life" | "investment_linked" | "health_coverage"
   balance: number
   change24h: number
   changePercent24h: number
@@ -158,22 +158,22 @@ export function getPortfolioData(profile?: {
   const accounts: Account[] = [
     {
       id: "acc_401k",
-      name: "401(k)",
-      type: "401k",
+      name: "Commercial Policy",
+      type: "commercial_policy",
       balance: Math.round(totalValue * 0.58),
       change24h: Math.round(totalValue * 0.58 * 0.0021),
       changePercent24h: 0.21,
-      institution: "Fidelity",
+      institution: "Woodgrove Commercial",
       iconType: "building",
     },
     {
       id: "acc_roth",
-      name: "Roth IRA",
-      type: "roth_ira",
+      name: "Whole Life Policy",
+      type: "whole_life",
       balance: Math.round(totalValue * 0.18),
       change24h: Math.round(totalValue * 0.18 * 0.0014),
       changePercent24h: 0.14,
-      institution: "Vanguard",
+      institution: "Woodgrove Life",
       iconType: "shield",
     },
     {
@@ -229,15 +229,15 @@ export function getPortfolioData(profile?: {
 
   // Transactions
   const recentActivity: Transaction[] = [
-    { id: "tx1", date: "2026-02-05", type: "contribution", description: "401(k) Payroll Contribution", amount: 2500, account: "401(k)", iconType: "dollar-sign" },
+    { id: "tx1", date: "2026-02-05", type: "contribution", description: "Commercial Policy Premium Payment", amount: 2500, account: "Commercial Policy", iconType: "dollar-sign" },
     { id: "tx2", date: "2026-02-01", type: "dividend", description: "Dividend Reinvested — VTI", amount: 127.43, account: "Brokerage", symbol: "VTI", iconType: "trending-up" },
-    { id: "tx3", date: "2026-01-28", type: "rebalance", description: "Automatic Rebalance Executed", amount: 0, account: "401(k)", iconType: "refresh-cw" },
-    { id: "tx4", date: "2026-01-22", type: "contribution", description: "Roth IRA Monthly Contribution", amount: 500, account: "Roth IRA", iconType: "shield" },
+    { id: "tx3", date: "2026-01-28", type: "rebalance", description: "Annual Coverage Review Executed", amount: 0, account: "Commercial Policy", iconType: "refresh-cw" },
+    { id: "tx4", date: "2026-01-22", type: "contribution", description: "Whole Life Monthly Premium", amount: 500, account: "Whole Life Policy", iconType: "shield" },
     { id: "tx5", date: "2026-01-15", type: "dividend", description: "Quarterly Dividend — VXUS", amount: 312.87, account: "Brokerage", symbol: "VXUS", iconType: "trending-up" },
-    { id: "tx6", date: "2026-01-10", type: "contribution", description: "401(k) Payroll Contribution", amount: 2500, account: "401(k)", iconType: "dollar-sign" },
-    { id: "tx7", date: "2025-12-31", type: "trade", description: "Tax Loss Harvest — Sold VLCAX", amount: -4250, account: "Brokerage", symbol: "VLCAX", iconType: "shuffle" },
-    { id: "tx8", date: "2025-12-28", type: "dividend", description: "Year-End Distribution — BND", amount: 89.21, account: "Roth IRA", symbol: "BND", iconType: "trending-up" },
-    { id: "tx9", date: "2025-12-15", type: "contribution", description: "401(k) Payroll Contribution", amount: 2500, account: "401(k)", iconType: "dollar-sign" },
+    { id: "tx6", date: "2026-01-10", type: "contribution", description: "Commercial Policy Premium Payment", amount: 2500, account: "Commercial Policy", iconType: "dollar-sign" },
+    { id: "tx7", date: "2025-12-31", type: "trade", description: "Portfolio Rebalance — Sold VLCAX", amount: -4250, account: "Brokerage", symbol: "VLCAX", iconType: "shuffle" },
+    { id: "tx8", date: "2025-12-28", type: "dividend", description: "Year-End Distribution — BND", amount: 89.21, account: "Whole Life Policy", symbol: "BND", iconType: "trending-up" },
+    { id: "tx9", date: "2025-12-15", type: "contribution", description: "Commercial Policy Premium Payment", amount: 2500, account: "Commercial Policy", iconType: "dollar-sign" },
     { id: "tx10", date: "2025-12-01", type: "fee", description: "Advisory Fee — Q4 2025", amount: -187.5, account: "Brokerage", iconType: "file-text" },
   ]
 

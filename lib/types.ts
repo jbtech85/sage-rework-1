@@ -221,7 +221,7 @@ export interface PreMeetingBrief {
 
 export type AccountType = 
   // US accounts
-  | '401k' | 'roth_401k' | 'traditional_ira' | 'roth_ira' | 'brokerage' | 'hsa'
+  | 'commercial_policy' | 'whole_life' | 'term_life' | 'investment_linked' | 'brokerage' | 'health_coverage'
   // Canadian accounts
   | 'rrsp' | 'tfsa' | 'rrif' | 'resp' | 'non_registered'
 
