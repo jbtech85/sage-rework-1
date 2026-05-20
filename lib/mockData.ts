@@ -355,20 +355,20 @@ export const generateMockChatResponse = (message: string, profile: UserProfile):
   let responseText = ""
 
   // Determine response based on message content
-  if (message.toLowerCase().includes("savings rate")) {
+  if (message.toLowerCase().includes("premium")) {
     analysisTemplate = mockAnalysisTemplates.savingsRateIncrease
-    responseText = `Great question, ${profile.name}! I've analyzed the impact of increasing your savings rate by 5%. Based on your current profile (age ${profile.age}, ${profile.risk_appetite} risk tolerance), this is one of the most powerful levers you have for improving your retirement outcome.`
-  } else if (message.toLowerCase().includes("retire") && message.toLowerCase().includes("earlier")) {
+    responseText = `Great question, ${profile.name}! I've analyzed the impact of a 10% premium increase on your coverage portfolio. Based on your current profile (age ${profile.age}, ${profile.risk_appetite} risk tolerance), this adjustment meaningfully improves your coverage position.`
+  } else if (message.toLowerCase().includes("umbrella") || message.toLowerCase().includes("liability")) {
     analysisTemplate = mockAnalysisTemplates.earlyRetirement
-    responseText = `I've analyzed retiring 2 years earlier for your profile, ${profile.name}. Given your current age of ${profile.age} and target retirement age of ${profile.target_retire_age}, early retirement is appealing but comes with important trade-offs to consider.`
-  } else if (message.toLowerCase().includes("market crash") || message.toLowerCase().includes("crash")) {
+    responseText = `I've analyzed adding umbrella liability coverage for your profile, ${profile.name}. Given your current coverage mix and risk exposure, this is a cost-effective way to extend your protection limits.`
+  } else if (message.toLowerCase().includes("market") || message.toLowerCase().includes("crash")) {
     analysisTemplate = mockAnalysisTemplates.marketCrash
-    responseText = `Excellent question about market resilience, ${profile.name}! I've analyzed how a significant market crash would affect your retirement plan. Based on your ${profile.risk_appetite} risk tolerance and current portfolio allocation, here's what you should know.`
-  } else if (message.toLowerCase().includes("healthcare")) {
+    responseText = `Excellent question about risk resilience, ${profile.name}! I've analyzed how adverse market conditions would affect your coverage portfolio. Based on your ${profile.risk_appetite} risk tolerance and current allocation, here's what you should know.`
+  } else if (message.toLowerCase().includes("health") || message.toLowerCase().includes("medical")) {
     analysisTemplate = mockAnalysisTemplates.healthcareCosts
-    responseText = `Healthcare costs are a crucial consideration, ${profile.name}. I've analyzed the impact of needing an additional $100k for healthcare expenses during retirement, considering your current financial situation.`
+    responseText = `Health coverage is a crucial consideration, ${profile.name}. I've analyzed the impact of adding supplemental medical coverage to your existing portfolio, considering your current risk profile.`
   } else {
-    responseText = `I've analyzed your scenario, ${profile.name}. Based on your profile (${profile.risk_appetite} risk tolerance, $${profile.salary.toLocaleString()} salary), I've created a customized projection that considers your current financial situation.`
+    responseText = `I've analyzed your coverage scenario, ${profile.name}. Based on your profile (${profile.risk_appetite} risk tolerance, $${profile.salary.toLocaleString()} annual income), I've created a customized projection that considers your current coverage needs.`
   }
 
   return {

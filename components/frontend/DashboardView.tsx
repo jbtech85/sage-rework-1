@@ -204,12 +204,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">YTD Return</p>
+              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Claims YTD</p>
               <p className="text-lg font-semibold text-emerald-600 tabular-nums">+{portfolio.ytdReturnPercent}%</p>
             </div>
             <div className="w-px h-10 bg-gray-100" />
             <div className="text-right">
-              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Coverage</p>
+              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Policy Term</p>
               <p className="text-lg font-semibold text-gray-900 tabular-nums">{goal.yearsRemaining} yrs</p>
             </div>
           </div>
@@ -391,7 +391,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 Get personalized coverage scenarios, risk projections, and AI-powered underwriting recommendations.
               </p>
               <span className="inline-flex items-center gap-2 text-sm font-medium bg-white/10 backdrop-blur-sm px-4 py-2.5 rounded-xl group-hover:bg-white/20 transition-all duration-200">
-                Start Planning
+                Analyze Coverage
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
               </span>
             </div>

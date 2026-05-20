@@ -257,7 +257,7 @@ export const AnalysisCard: React.FC<AnalysisCardProps> = ({
 
           {analysis.retirementIncome && (
             <MetricCard
-              title="Retirement Income"
+              title="Monthly Premium"
               primaryValue={`$${analysis.retirementIncome.amount.toLocaleString()}`}
               primaryUnit="/mo"
               baselineLabel="Baseline"

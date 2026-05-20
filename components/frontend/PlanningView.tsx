@@ -180,7 +180,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
     conversationIdRef.current = null
     setMessages([{
       role: "assistant",
-      content: "Hello! I'm Sage, your AI retirement planning assistant. I can help you explore different retirement scenarios, analyze their outcomes, and recommend specific products and strategies. Try asking me something like 'What if I retire at 62 instead of 65?' or use one of the quick scenarios below.",
+      content: "Hello! I'm Sage, your AI underwriting assistant. I can help you explore different coverage scenarios, analyze risk outcomes, and recommend specific products and strategies. Try asking me something like 'What if I add umbrella liability coverage?' or use one of the quick scenarios below.",
       timestamp: Date.now(),
       analysis: null,
       showQuickScenarios: true,
@@ -303,7 +303,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
                   if (last?.role === "assistant") {
                     last.analysis = finalAnalysis
                     last.content =
-                      "I've completed your retirement analysis. Here are the results:"
+                      "I've completed your underwriting analysis. Here are the results:"
                   }
                   return next
                 })

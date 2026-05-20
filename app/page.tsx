@@ -86,7 +86,7 @@ const adminNavItems: NavItem[] = [
 
 // ─── Main App ───────────────────────────────────────────────────────────────
 
-export default function RetirementPlanningApp() {
+export default function UnderwritingApp() {
   // Persona state
   const [currentPersona, setCurrentPersona] = useState<UserRole>("client")
   
