@@ -1,40 +1,40 @@
 [
   {
     "id": "advisor-jane",
-    "email": "jane.smith@sagefinancial.com",
+    "email": "jane.smith@woodgroveintl.com",
     "name": "Jane Smith",
     "role": "advisor",
     "created_at": "2024-01-15T10:00:00Z",
     "updated_at": "2026-02-12T17:24:10.310877",
-    "license_number": "CFP-123456",
+    "license_number": "UW-123456",
     "jurisdictions": [
       "US",
       "CA"
     ],
     "specializations": [
-      "retirement_planning",
-      "tax_optimization",
-      "estate_planning"
+      "life_insurance",
+      "commercial_property",
+      "liability_coverage"
     ],
-    "bio": "Senior Financial Advisor with 20+ years of experience. Updated bio.",
+    "bio": "Senior Underwriter with 20+ years of experience across personal and commercial lines. Specializes in complex risk assessment and portfolio coverage optimization.",
     "client_count": null,
     "total_aum": null
   },
   {
     "id": "advisor-mike",
-    "email": "mike.johnson@sagefinancial.com",
+    "email": "mike.johnson@woodgroveintl.com",
     "name": "Michael Johnson",
     "role": "advisor",
-    "license_number": "CFP-789012",
+    "license_number": "UW-789012",
     "jurisdictions": [
       "US"
     ],
     "specializations": [
-      "401k_optimization",
-      "early_retirement",
-      "high_net_worth"
+      "high_net_worth",
+      "specialty_lines",
+      "umbrella_liability"
     ],
-    "bio": "Former Wall Street analyst turned financial advisor. Expert in aggressive growth strategies for early retirement.",
+    "bio": "Former risk analyst with deep expertise in high-net-worth and specialty coverage underwriting. Focuses on complex liability and bespoke insurance solutions.",
     "created_at": "2024-03-20T09:00:00Z",
     "updated_at": "2026-02-01T14:30:00Z"
   }

@@ -70,7 +70,7 @@ const clientNavItems: NavItem[] = [
 
 const advisorNavItems: NavItem[] = [
   { id: "advisor-dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "advisor-clients", label: "Clients", icon: Users },
+  { id: "advisor-clients", label: "Applicants", icon: Users },
   { id: "advisor-scenarios", label: "Scenarios", icon: TrendingUp },
   { id: "advisor-escalations", label: "Escalations", icon: Bell },
   { id: "advisor-appointments", label: "Appointments", icon: Calendar },
@@ -312,9 +312,9 @@ export default function RetirementPlanningApp() {
                 <Leaf className={`w-4 h-4 sm:w-5 sm:h-5 ${getLeafColor()}`} />
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-lg font-semibold text-gray-900 tracking-tight">Sage</h1>
+                <h1 className="text-lg font-semibold text-gray-900 tracking-tight">Woodgrove</h1>
                 <p className="text-[11px] text-gray-400 font-medium">
-                  {currentPersona === "advisor" ? "Advisor Portal" : currentPersona === "admin" ? "Admin Portal" : "Retirement Planning"}
+                  {currentPersona === "advisor" ? "Underwriter Portal" : currentPersona === "admin" ? "Admin Portal" : "Underwriting Platform"}
                 </p>
               </div>
             </div>
@@ -364,11 +364,11 @@ export default function RetirementPlanningApp() {
                       ? "text-amber-700"
                       : "text-gray-700"
                   }`}>
-                    {currentPersona === "advisor" 
-                      ? currentAdvisor.name 
-                      : currentPersona === "admin" 
+                    {currentPersona === "advisor"
+                      ? currentAdvisor.name
+                      : currentPersona === "admin"
                       ? "Admin"
-                      : selectedProfile?.name || "Client"}
+                      : selectedProfile?.name || "Applicant"}
                   </span>
                   <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showAdvisorDropdown ? 'rotate-180' : ''}`} />
                 </button>
@@ -386,8 +386,8 @@ export default function RetirementPlanningApp() {
                         <p className="text-xs text-gray-500 font-medium px-2 mb-2">Switch Persona</p>
                         <div className="flex gap-1">
                           {[
-                            { id: "client" as UserRole, label: "Client", icon: Users, color: "gray" },
-                            { id: "advisor" as UserRole, label: "Advisor", icon: Briefcase, color: "indigo" },
+                            { id: "client" as UserRole, label: "Applicant", icon: Users, color: "gray" },
+                            { id: "advisor" as UserRole, label: "Underwriter", icon: Briefcase, color: "indigo" },
                             { id: "admin" as UserRole, label: "Admin", icon: Shield, color: "amber" },
                           ].map(p => (
                             <button
@@ -467,7 +467,7 @@ export default function RetirementPlanningApp() {
                       {/* Advisor Selection - only show in advisor mode */}
                       {currentPersona === "advisor" && (
                         <div className="p-2 border-b border-gray-100">
-                          <p className="text-xs text-gray-500 font-medium px-2 mb-2">Switch Advisor</p>
+                          <p className="text-xs text-gray-500 font-medium px-2 mb-2">Switch Underwriter</p>
                           {availableAdvisors.map((advisor) => (
                             <button
                               key={advisor.id}

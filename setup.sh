@@ -2,7 +2,7 @@
 
 echo
 echo "========================================"
-echo " Sage Retirement Planning - Quick Start"
+echo " Woodgrove International - Underwriting Platform Quick Start"
 echo "========================================"
 echo
 

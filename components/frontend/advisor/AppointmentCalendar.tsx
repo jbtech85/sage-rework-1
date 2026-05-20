@@ -202,28 +202,28 @@ const MOCK_APPOINTMENTS: Appointment[] = [
 const MOCK_PRE_MEETING_BRIEF: PreMeetingBrief = {
   id: "brief-1",
   appointment_id: "appt-1",
-  client_summary: "John Doe is a 40-year-old professional with a balanced investment approach. He has been actively using Sage for 8 months and shows strong engagement with retirement planning tools.",
+  client_summary: "John Doe is a 40-year-old small business owner with a balanced coverage approach. He has been actively using Woodgrove for 8 months and shows strong engagement with coverage scenario tools.",
   financial_snapshot: {
     total_assets: 280000,
     goal_progress_percent: 42,
     risk_score: 55,
-    key_concerns: ["Retirement savings pace", "Tax optimization opportunities"]
+    key_concerns: ["Coverage gap in liability layer", "Premium optimization opportunities"]
   },
   recent_activity: {
     last_login: "2026-02-10T18:30:00Z",
-    scenarios_explored: ["Early retirement at 60", "Increased savings rate"],
-    questions_asked: ["Roth conversion timing", "401k contribution limits", "Social Security estimates"]
+    scenarios_explored: ["Adding umbrella liability", "Increasing commercial property limits"],
+    questions_asked: ["Surplus lines tax treatment", "BOP vs CGL comparison", "Cyber liability options"]
   },
   suggested_topics: [
-    "Review progress toward retirement goals",
-    "Discuss Roth conversion opportunity given current tax bracket",
-    "Explore increasing 401k contribution to max",
-    "Social Security claiming strategy"
+    "Review progress toward coverage adequacy goals",
+    "Discuss umbrella liability top-up given current asset exposure",
+    "Explore adding professional indemnity for consulting activities",
+    "Workers compensation classification review"
   ],
   regulatory_considerations: [
-    "2026 401k limit is $23,500 ($31,000 with catch-up at 50+)",
-    "Client is below Roth IRA income limit - eligible for direct contributions",
-    "Consider tax-loss harvesting before year-end"
+    "US auto liability minimums are $25,000/$50,000/$10,000 — applicant is above minimums",
+    "Commercial property filing requirements apply if adding surplus lines coverage",
+    "NFIP flood requirement may apply if commercial property is in SFHA zone"
   ],
   generated_at: "2026-02-11T08:00:00Z"
 }
@@ -231,38 +231,38 @@ const MOCK_PRE_MEETING_BRIEF: PreMeetingBrief = {
 const MOCK_POST_MEETING_ANALYSIS: PostMeetingAnalysis = {
   id: "analysis-1",
   appointment_id: "appt-4",
-  transcript_summary: "Discussion focused on Social Security claiming strategy and portfolio risk as client approaches retirement. Linda expressed preference for guaranteed income and concern about market volatility.",
+  transcript_summary: "Discussion focused on coverage adequacy as Linda approaches her target coverage reassessment age. Linda expressed preference for stable premiums and concern about large claims exposure.",
   key_topics: [
-    "Social Security timing (age 67 vs earlier)",
-    "Bond allocation increase consideration",
-    "Medicare enrollment timeline",
-    "Required Minimum Distribution planning"
+    "Umbrella liability limit increase (current $1M vs recommended $2M)",
+    "Whole life vs term renewal decision",
+    "Long-term care coverage options",
+    "Workers comp classification audit"
   ],
   action_items: [
-    { task: "Run Social Security optimization scenarios", assignee: "advisor", due_date: "2026-02-15" },
-    { task: "Review current bond fund options", assignee: "advisor", due_date: "2026-02-17" },
-    { task: "Gather Medicare information from employer", assignee: "client", due_date: "2026-02-20" },
-    { task: "Schedule follow-up to review scenarios", assignee: "advisor", due_date: "2026-02-14" }
+    { task: "Run umbrella liability coverage scenarios", assignee: "advisor", due_date: "2026-02-15" },
+    { task: "Review current whole life policy options", assignee: "advisor", due_date: "2026-02-17" },
+    { task: "Gather business payroll details for workers comp audit", assignee: "client", due_date: "2026-02-20" },
+    { task: "Schedule follow-up to review coverage scenarios", assignee: "advisor", due_date: "2026-02-14" }
   ],
   client_sentiment: "positive",
   follow_up_questions: [
-    "What is your expected healthcare cost in retirement?",
-    "Have you considered long-term care insurance?",
-    "Would you like to explore annuity options for guaranteed income?"
+    "What is your expected premium budget for additional specialty coverage?",
+    "Have you considered long-term care insurance as part of your coverage plan?",
+    "Would you like to explore bundling home and commercial property for a multi-policy discount?"
   ],
   draft_follow_up_email: `Dear Linda,
 
-Thank you for meeting with me today to discuss your retirement planning progress. I wanted to summarize our conversation and outline next steps.
+Thank you for meeting with me today to discuss your insurance coverage review. I wanted to summarize our conversation and outline next steps.
 
 **Key Discussion Points:**
-- We reviewed your preference to claim Social Security at age 67 for full benefits
-- Discussed your comfort level with current portfolio allocation
-- Touched on Medicare enrollment timing as you approach 65
+- We reviewed your current umbrella liability limits and identified a potential gap vs. your asset exposure
+- Discussed your preference for stable premiums with whole life over term renewal
+- Touched on long-term care coverage options as you approach your target reassessment age
 
 **Action Items:**
-- I will run detailed Social Security optimization scenarios by February 15th
-- Please gather information about your employer's retiree healthcare options
-- I'll schedule a follow-up meeting to review the scenarios together
+- I will run detailed umbrella liability coverage scenarios by February 15th
+- Please gather your business payroll details for the workers comp classification review
+- I'll schedule a follow-up meeting to review the coverage scenarios together
 
 **Next Meeting:** I'll send a calendar invite for the week of February 17th.
 

@@ -62,45 +62,45 @@ interface QuickQuery {
 
 const QUICK_QUERIES: QuickQuery[] = [
   {
-    id: "401k-limits",
-    label: "RRSP Limits & Deadline",
+    id: "us-auto-minimums",
+    label: "US Auto Liability Minimums",
     icon: <DollarSign className="w-4 h-4" />,
-    prompt: "For a Canadian client, what is the RRSP contribution limit and what deadline applies for claiming contributions against the prior tax year?",
+    prompt: "What are the typical US state minimum auto liability requirements, and when should I recommend higher limits for an applicant?",
     category: "regulatory",
   },
   {
-    id: "roth-conversion",
-    label: "TFSA Rules",
+    id: "nfip-flood",
+    label: "NFIP Flood Requirements",
     icon: <RefreshCw className="w-4 h-4" />,
-    prompt: "Can you summarize TFSA contribution and withdrawal rules, including when withdrawn room is added back?",
+    prompt: "Can you summarize the NFIP mandatory flood purchase requirement and coverage limits for residential and commercial properties?",
     category: "regulatory",
   },
   {
-    id: "rrsp-limits",
-    label: "RRIF Conversion & Minimums",
+    id: "workers-comp",
+    label: "Workers Comp Obligations",
     icon: <DollarSign className="w-4 h-4" />,
-    prompt: "What are the RRSP-to-RRIF conversion rules and how should I explain minimum RRIF withdrawals by age?",
+    prompt: "What are US employer obligations for workers compensation coverage, and how does this vary by state?",
     category: "regulatory",
   },
   {
-    id: "cpp-timing",
-    label: "CPP Timing Strategy",
+    id: "surplus-lines",
+    label: "Surplus Lines Tax",
     icon: <Scale className="w-4 h-4" />,
-    prompt: "How should I frame CPP timing at 60 vs 65 vs 70 for a Canadian client, and what trade-offs should I highlight?",
+    prompt: "How should I explain surplus lines premium tax to a commercial applicant, and what rate range applies?",
     category: "planning",
   },
   {
-    id: "social-security",
-    label: "OAS & GIS Basics",
+    id: "ca-licat",
+    label: "OSFI LICAT Requirements",
     icon: <Scale className="w-4 h-4" />,
-    prompt: "Can you summarize OAS and GIS eligibility basics and when each benefit becomes relevant in retirement planning?",
+    prompt: "Can you summarize OSFI LICAT requirements for Canadian life insurers and what the supervisory target ratio means in practice?",
     category: "planning",
   },
   {
-    id: "rmd-rules",
-    label: "HBP & LLP from RRSP",
+    id: "ca-pipeda",
+    label: "PIPEDA & Health Data",
     icon: <BookOpen className="w-4 h-4" />,
-    prompt: "What are the key rules for using RRSP funds through the Home Buyers' Plan and the Lifelong Learning Plan?",
+    prompt: "What are the PIPEDA requirements around applicant health data collection and consent for Canadian insurance underwriting?",
     category: "regulatory",
   },
 ]
@@ -108,63 +108,65 @@ const QUICK_QUERIES: QuickQuery[] = [
 // ─── Mock Responses ─────────────────────────────────────────────────────────
 
 const MOCK_RESPONSES: Record<string, { content: string; citations?: AdvisorChatCitation[] }> = {
-  "401k-limits": {
-    content: `## RRSP Contribution Rules (Canada)
+  "us-auto-minimums": {
+    content: `## US Auto Liability Minimums
 
-### Contribution Limit Framework
-- **Formula**: Lesser of 18% of prior-year earned income and the annual dollar maximum [REF:ca-rrsp-limit-2026]
-- **Unused Room**: Carries forward indefinitely
-- **Pension Adjustment**: May reduce available RRSP room for clients with pension plans
+### Typical State Minimums
+- **Bodily Injury per Person**: $25,000 [REF:us-minimum-liability-auto]
+- **Bodily Injury per Occurrence**: $50,000 [REF:us-minimum-liability-auto]
+- **Property Damage**: $10,000 [REF:us-minimum-liability-auto]
 
-### Contribution Deadline
-- **Prior-Year Deduction Window**: Contributions made in the first 60 days of the calendar year can be applied to the prior tax year
-- **Planning Tip**: Confirm exact CRA deadline date each year for filing workflows
+### When to Recommend Higher Limits
+- Applicants with significant assets at risk from a lawsuit
+- Commercial drivers or high-mileage drivers
+- Any applicant in a high-litigation state
 
-### Advisor Considerations
-1. **Coordinate with Tax Bracket Planning**: Compare RRSP deduction benefit now vs expected retirement tax rate
-2. **Validate CRA Notice of Assessment Room**: Use client-specific room before recommending top-up
-3. **Pair with TFSA Strategy**: Blend RRSP and TFSA when flexibility is needed`,
+### Underwriter Considerations
+1. **Flag Minimum-Only Coverage**: Escalate applicants carrying only state minimums on high-value risks
+2. **Recommend Umbrella Layering**: Personal umbrella policies start where auto liability ends
+3. **Document Limit Elections**: Record the reason for limit selection in the applicant file`,
     citations: [
-      { id: "ca-rrsp-limit-2026", title: "RRSP Contribution Limit 2026", source: "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/rrsps-related-plans/contributing-a-rrsp-prpp.html" },
+      { id: "us-minimum-liability-auto", title: "US Minimum Auto Liability Requirements", source: "https://www.iii.org/article/auto-insurance-state-minimums" },
     ],
   },
-  "roth-conversion": {
-    content: `## TFSA Contributions and Withdrawals
+  "nfip-flood": {
+    content: `## NFIP Mandatory Flood Purchase Requirement
 
-### Core Contribution Rules
-- **Annual Room**: Clients can contribute up to available TFSA room [REF:ca-tfsa-limit-2026]
-- **No Deduction**: TFSA contributions are not tax-deductible
-- **Over-Contribution Risk**: Excess contributions can trigger CRA penalties
+### Coverage Limits
+- **Residential Building**: Up to $250,000 [REF:us-nfip-flood-requirement]
+- **Residential Contents**: Up to $100,000 [REF:us-nfip-flood-requirement]
+- **Commercial Building**: Up to $500,000 [REF:us-nfip-flood-requirement]
 
-### Withdrawal Mechanics
-1. **Tax Treatment**: Eligible TFSA withdrawals are tax-free
-2. **Room Reinstatement**: Withdrawn amounts are generally added back in the next calendar year
-3. **Timing Note**: Re-contributing in the same year may cause over-contribution if no room remains
+### Who Must Purchase
+- Properties in FEMA Special Flood Hazard Areas (SFHA) with federally-backed mortgages
+- Lender must verify flood insurance at origination and each renewal
 
-### Advisor Considerations
-- TFSA often complements RRSP for clients expecting similar or higher retirement tax rates
-- Track room carefully for clients making multiple in-year deposits and withdrawals`,
+### Underwriter Considerations
+- Applicants with properties exceeding NFIP limits should be referred to excess flood markets
+- Track FEMA flood zone determinations for all property risks
+- Private flood alternatives may offer broader terms and higher limits`,
     citations: [
-      { id: "ca-tfsa-limit-2026", title: "TFSA Contribution Limit 2026", source: "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/tax-free-savings-account/contributions.html" },
+      { id: "us-nfip-flood-requirement", title: "NFIP Mandatory Flood Purchase Requirement", source: "https://www.fema.gov/flood-insurance/work-with-nfip/mandatory-purchase" },
     ],
   },
-  "rrsp-limits": {
-    content: `## RRSP to RRIF Conversion and Minimum Withdrawals
+  "workers-comp": {
+    content: `## Workers Compensation Employer Obligations
 
-### RRIF Conversion Rule
-- **Mandatory Conversion**: RRSP must be converted by the end of the year the client turns 71 [REF:ca-rrif-conversion]
-- **Eligible Paths**: Typically convert to RRIF or purchase an annuity
+### General Requirement
+- Most US states require coverage for employers with **1 or more employees** [REF:us-workers-comp-requirement]
+- Benefits cover medical expenses and lost wages for work-related injuries
 
-### Minimum Withdrawal Requirement
-- **Annual Minimum**: Once converted, clients must withdraw at least the minimum amount each year
-- **Age-Based Factor**: Minimum percentage increases with age
+### State Variations
+- Texas allows employers to opt out (non-subscriber status)
+- Some states have monopolistic funds (e.g., Ohio, Wyoming)
+- Benefit duration and amounts vary by state
 
-### Advisor Considerations
-1. **Cash-Flow Planning**: Integrate RRIF minimums with CPP/OAS timing
-2. **Tax Smoothing**: Manage withdrawals to reduce bracket spikes
-3. **Household Strategy**: Coordinate spouse accounts and pension income splitting where applicable`,
+### Underwriter Considerations
+1. **Verify Payroll Classification**: Ensure job classifications match actual duties
+2. **Experience Modification Factor**: High mod rates indicate elevated risk
+3. **Audit Requirements**: Most policies are subject to premium audit at policy year end`,
     citations: [
-      { id: "ca-rrif-conversion", title: "RRSP to RRIF Conversion", source: "https://www.canada.ca/en/revenue-agency/services/tax/individuals/topics/registered-retirement-income-fund-rrif.html" },
+      { id: "us-workers-comp-requirement", title: "Workers Compensation Employer Obligation", source: "https://www.dol.gov/agencies/owcp/FECA/regs/statutes" },
     ],
   },
 }

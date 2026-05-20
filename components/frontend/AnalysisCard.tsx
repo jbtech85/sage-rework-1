@@ -423,9 +423,9 @@ export const AnalysisCard: React.FC<AnalysisCardProps> = ({
             <span className="font-semibold">Disclaimer:</span>
             <span>
               This analysis is provided for informational purposes to explore
-              retirement planning scenarios and does not constitute investment
-              advice. Consult a qualified financial advisor before making
-              investment decisions.
+              insurance coverage scenarios and does not constitute underwriting
+              advice. Consult a qualified insurance professional before making
+              coverage decisions.
             </span>
           </div>
         </div>
