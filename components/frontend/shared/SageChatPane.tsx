@@ -29,7 +29,7 @@ export const SageFloatingButton: React.FC<SageFloatingButtonProps> = ({
     <button
       onClick={onClick}
       className="fixed bottom-6 right-6 z-40 group"
-      aria-label="Open Sage AI Chat"
+      aria-label="Open Woodgrove AI Chat"
     >
       <div className="relative">
         {/* Pulse ring */}
@@ -90,9 +90,9 @@ export const SageChatPane: React.FC<SageChatPaneProps> = ({
                 <Leaf className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-white tracking-tight">Sage AI</h2>
+                <h2 className="text-sm font-semibold text-white tracking-tight">Woodgrove AI</h2>
                 <div className="flex items-center gap-2">
-                  <p className="text-[11px] text-gray-400">Retirement Planning Assistant</p>
+                  <p className="text-[11px] text-gray-400">Insurance Underwriting Assistant</p>
                   <PoweredByLabel product="Copilot" variant="dark" />
                 </div>
               </div>

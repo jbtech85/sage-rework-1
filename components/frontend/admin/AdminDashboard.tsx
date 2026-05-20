@@ -924,7 +924,7 @@ const RegulatoryRulesView: React.FC<RegulatoryRulesViewProps> = ({ isMockMode = 
             <h2 className="text-lg font-semibold text-gray-900">Regulatory Rules</h2>
             <PoweredByLabel product="Foundry IQ" variant="light" />
           </div>
-          <p className="text-sm text-gray-500">US and Canadian retirement planning regulations</p>
+          <p className="text-sm text-gray-500">US and Canadian insurance regulatory rules</p>
         </div>
         <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 flex items-center gap-2">
           <Plus className="w-4 h-4" />

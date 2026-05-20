@@ -82,10 +82,10 @@ interface ConversationSummary {
 const MOCK_CONVERSATIONS: ConversationSummary[] = [
   {
     id: "conv-1",
-    title: "Retirement Planning Questions",
+    title: "Coverage Review Questions",
     message_count: 12,
     last_message_at: "2026-02-10T14:30:00Z",
-    summary: "Client asked about optimal retirement age and Social Security timing. Explored delaying to 67 vs. 65."
+    summary: "Applicant asked about optimal coverage mix and umbrella liability limits. Explored increasing from $1M to $2M."
   },
   {
     id: "conv-2",

@@ -209,7 +209,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             <div className="w-px h-10 bg-gray-100" />
             <div className="text-right">
-              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Retirement</p>
+              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Coverage</p>
               <p className="text-lg font-semibold text-gray-900 tabular-nums">{goal.yearsRemaining} yrs</p>
             </div>
           </div>
@@ -316,7 +316,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Two-column: Retirement Progress + Sage CTA */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Retirement Progress */}
+          {/* Coverage Progress */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2.5">
@@ -324,7 +324,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <Target className="w-4 h-4 text-amber-600" />
                 </div>
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
-                  Retirement Goal
+                  Coverage Goal
                 </h3>
               </div>
             </div>
@@ -386,9 +386,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/30">
                 <Leaf className="w-5 h-5 text-white" />
               </div>
-              <h3 className="text-lg font-semibold mb-1.5 tracking-tight">Consult Sage for Advice</h3>
+              <h3 className="text-lg font-semibold mb-1.5 tracking-tight">Consult Woodgrove AI</h3>
               <p className="text-gray-400 text-sm leading-relaxed mb-5">
-                Get personalized retirement scenarios, projections, and AI-powered recommendations.
+                Get personalized coverage scenarios, risk projections, and AI-powered underwriting recommendations.
               </p>
               <span className="inline-flex items-center gap-2 text-sm font-medium bg-white/10 backdrop-blur-sm px-4 py-2.5 rounded-xl group-hover:bg-white/20 transition-all duration-200">
                 Start Planning

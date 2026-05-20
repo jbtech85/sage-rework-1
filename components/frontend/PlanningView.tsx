@@ -49,7 +49,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
     {
       role: "assistant",
       content:
-        "Hello! I'm Sage, your AI retirement planning assistant. I can help you explore different retirement scenarios, analyze their outcomes, and recommend specific products and strategies. Try asking me something like 'What if I retire at 62 instead of 65?' or use one of the quick scenarios below.",
+        "Hello! I'm Woodgrove AI, your insurance underwriting assistant. I can help you explore different coverage scenarios, analyze risk outcomes, and recommend specific products and strategies. Try asking me something like 'What if I add umbrella liability coverage?' or use one of the quick scenarios below.",
       timestamp: Date.now(),
       analysis: null,
       showQuickScenarios: true,
@@ -742,7 +742,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
             value={currentMessage}
             onChange={(e) => setCurrentMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask me about your retirement planning goals..."
+            placeholder="Ask me about your coverage needs and underwriting scenarios..."
             disabled={isLoading || !selectedProfile}
             rows={1}
             className="flex-1 px-4 py-3 border border-green-300/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/40 focus:border-green-500/60 text-base placeholder-gray-400 bg-white/80 backdrop-blur-sm resize-none leading-normal"

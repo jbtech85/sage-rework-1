@@ -1,6 +1,6 @@
 """
-Retirement Planning API Backend
-FastAPI server with Azure AI integration for retirement planning analysis
+Insurance Underwriting API Backend
+FastAPI server with Azure AI integration for insurance underwriting analysis
 Enhanced with streaming responses and real-time status updates
 """
 
@@ -391,17 +391,27 @@ def get_product_catalogue(risk: str = "medium") -> str:
 
 # System instructions for the AI agent
 SYSTEM_INSTRUCTIONS = """
-You are Sage, a retirement planning assistant. For every scenario request you must:
-1. Analyze the user's financial situation and retirement goals
-2. Calculate realistic projections using the provided data, using the code interpreter tool to calculate financial metrics.
+You are Woodgrove AI, an insurance underwriting assistant. For every scenario request you must:
+1. Analyze the applicant's risk profile, insurable assets, and coverage needs
+2. Calculate realistic coverage projections using the provided data, using the code interpreter tool to calculate underwriting metrics.
 3. Return structured JSON that matches the AnalysisOutput schema EXACTLY. The schema is provided below.
-4. Provide actionable recommendations and product allocations, using the get_product_catalogue function to fetch investment products.
-5. Include follow-up questions and alternative scenarios
+4. Provide actionable coverage recommendations and product allocations, using the get_product_catalogue function to fetch insurance products.
+5. Include follow-up questions and alternative coverage scenarios
 
-ALWAYS use the code interpreter and product catalogue tools for data analysis and product recommendations.
+ALWAYS use the code interpreter and product catalogue tools for risk analysis and coverage recommendations.
 
-Use the get_product_catalogue function for investment product data.
+Use the get_product_catalogue function for insurance product data. Products are organised by applicant risk level (low/medium/high).
 Always provide specific numbers and percentages in your analysis based on the output from the code interpreter tool.
+
+In this context:
+- "investment_assets" represents the applicant's total insurable asset value
+- "yearly_savings_rate" represents the annual premium rate (as a decimal, e.g. 0.015 = 1.5% of insurable value)
+- "portfolio" represents the applicant's current coverage distribution across coverage types (life, property, liability, health, specialty, etc.)
+- "target_monthly_income" represents the desired monthly coverage benefit / income replacement target
+- "target_retire_age" represents the policy term end age or target age for coverage reassessment
+- Monthly income projections represent projected monthly coverage benefit payouts
+- Success rate represents the probability of meeting coverage adequacy targets
+- Cashflow projections represent projected coverage value (insured asset value protected) over time
 
 
 CRITICAL: Your response must be a single, well-formed JSON object with a schema that matches the sample AnalysisOutput below. Make sure retirement income is calculated accurately and is not zero.
@@ -508,14 +518,14 @@ Example JSON structure:
     ]
   },
   "follow_ups": [
-    "What if I retired 2 years earlier?",
-    "How would a market crash affect my plan?"
+    "What if I add umbrella liability coverage?",
+    "How would a major claim event affect my coverage?"
   ],
   "alternatives": [
-    "Increasing savings rate to 20%",
-    "Considering more conservative portfolio"
+    "Increasing annual premium rate to 2%",
+    "Adding whole life for permanent coverage"
   ],
-  "considerations": "Your plan shows good fundamentals but consider increasing your emergency fund."
+  "considerations": "Your coverage profile shows good fundamentals but consider closing the liability gap to reach target allocation."
 }
 
 Do not include any explanatory text before or after the JSON. The JSON must be complete and valid.
@@ -620,7 +630,7 @@ thread_manager = ThreadManager(agents_client)
 
 # Agent setup
 def setup_agent():
-  """Initialize or find the retirement planning agent"""
+  """Initialize or find the insurance underwriting agent"""
   try:
       functions = FunctionTool(user_functions)
       tools = functions.definitions
@@ -801,7 +811,7 @@ async def evaluate_agent_run(thread_id: str, run_id: str) -> Optional[Dict[str, 
         return {"error": f"Evaluation failed: {str(e)}"}
 
 # FastAPI app
-app = FastAPI(title="Retirement Planning API", version="1.0.0")
+app = FastAPI(title="Insurance Underwriting API", version="1.0.0")
 
 # Include advisor and admin routers
 from advisor_routes import router as advisor_router
@@ -820,7 +830,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-  return {"message": "Retirement Planning API", "status": "active"}
+  return {"message": "Insurance Underwriting API", "status": "active"}
 
 @app.get("/health")
 async def health():
@@ -874,10 +884,10 @@ async def get_profiles():
 from advisor_storage import advisor_storage as _advisor_store
 from models import EscalationTicket, EscalationReason, EscalationPriority
 
-ADVISOR_SYSTEM_PROMPT = """You are Sage, an AI assistant for financial advisors. You help advisors manage their practice, 
-understand their clients' situations, and provide data-driven insights for retirement planning.
+ADVISOR_SYSTEM_PROMPT = """You are Woodgrove AI, an AI assistant for insurance underwriters. You help underwriters manage their practice,
+understand their applicants' risk profiles, and provide data-driven insights for insurance coverage decisions.
 
-You are NOT the client's advisor — you are a tool that helps the advisor do their job better.
+You are NOT the applicant's underwriter — you are a tool that helps the underwriter do their job better.
 
 Current date: {today}
 
@@ -887,7 +897,7 @@ License: {advisor_license}
 Jurisdictions: {advisor_jurisdictions}
 Specializations: {advisor_specializations}
 
-## Client Portfolio Summary
+## Applicant Coverage Summary
 {client_summaries}
 
 ## Pending Escalations
@@ -899,16 +909,16 @@ Specializations: {advisor_specializations}
 ## Regulatory & Compliance Reference Data
 {regulatory_summaries}
 
-## Approved Investment Products
+## Approved Insurance Products
 {product_summaries}
 
 ## Instructions
-- Use specific client names, numbers, and data from the context above.
+- Use specific applicant names, numbers, and data from the context above.
 - For regulatory questions, specify which jurisdiction (US or CA) applies.
-- When discussing a specific client, reference their actual portfolio, age, goals, and status.
-- If asked for a daily brief, synthesize today's appointments, pending escalations, and at-risk clients into actionable insights.
-- For pre-meeting briefs, focus on the specific client's financial snapshot, recent activity, talking points, and risks.
-- Never invent client data that isn't in the context above.
+- When discussing a specific applicant, reference their actual coverage allocation, age, coverage goals, and status.
+- If asked for a daily brief, synthesize today's appointments, pending escalations, and at-risk applicants into actionable insights.
+- For pre-meeting briefs, focus on the specific applicant's coverage snapshot, recent activity, talking points, and underwriting risks.
+- Never invent applicant data that isn't in the context above.
 - Do NOT return JSON — respond in natural language with markdown formatting.
 
 ## CRITICAL: Response Format
@@ -923,25 +933,21 @@ You MUST format every response using this exact markdown structure so the fronte
 
 Example of a CORRECTLY formatted response:
 
-## 2026 401(k) Contribution Limits
+## US Auto Liability Minimums
 
-### Employee Contributions
-- **Standard Limit**: $23,500 (up from $23,000 in 2025) [REF:us-401k-limit-2026]
-- **Catch-up Contribution (Age 50+)**: Additional $7,500 [REF:us-401k-catchup-2026]
-- **Total for 50+**: $31,000
-
-### Key Changes for 2026
-- **Ages 60-63**: Additional catch-up of $11,250 (instead of $7,500)
-- **Total for ages 60-63**: $34,750
+### Coverage Requirements
+- **Typical Minimum BI per Person**: $25,000 [REF:us-minimum-liability-auto]
+- **Typical Minimum BI per Occurrence**: $50,000 [REF:us-minimum-liability-auto]
+- **Typical Minimum Property Damage**: $10,000 [REF:us-minimum-liability-auto]
 
 ### Important Notes
-- These limits apply to all 401(k) contributions combined if client has multiple employers
-- Roth 401(k) contributions count toward the same limit
+- State minimums are a floor — underwriters recommend significantly higher limits for adequate protection
+- Commercial auto follows different rules from personal auto
 
 ### Recommended Actions
-1. **Review Client Contributions**: Check if any clients are under-contributing
-2. **Update Payroll Elections**: Remind affected clients to update their payroll
-3. **Document Changes**: Record all contribution adjustments in client files
+1. **Review Applicant Coverage**: Confirm liability limits exceed state minimums
+2. **Flag Under-Insured Cases**: Escalate applicants carrying only minimum limits
+3. **Document Coverage Decisions**: Record all limit election justifications in applicant files
 
 ALWAYS follow this exact format. NEVER use level-1 headings (single #). ALWAYS start with a ## title. Use ### for every section. Use `- **Key**: Value` for any factual data point.
 
@@ -949,9 +955,9 @@ ALWAYS follow this exact format. NEVER use level-1 headings (single #). ALWAYS s
 Whenever you reference a specific regulatory rule, contribution limit, tax treatment, withdrawal rule, or government benefit from the Regulatory Reference Data above, you MUST cite it inline using the format: [REF:rule-id]
 
 Examples:
-- "The 2026 401(k) limit is $23,500 [REF:us-401k-limit-2026]"
-- "CPP standard retirement age is 65, with early claiming available at 60 [REF:ca-cpp-standard]"
-- "RMDs must begin at age 73 under SECURE 2.0 [REF:us-rmd-age]"
+- "Typical US auto liability minimums are $25,000/$50,000/$10,000 [REF:us-minimum-liability-auto]"
+- "NFIP residential building maximum coverage is $250,000 [REF:us-nfip-flood-requirement]"
+- "OSFI requires a minimum LICAT ratio of 90% for Canadian life insurers [REF:ca-iiroc-life-minimum]"
 
 Always cite the most specific rule. If multiple rules apply, cite each one separately.
 Only use [REF:id] for rules that exist in the Regulatory Reference Data — never fabricate a reference ID.
@@ -1958,7 +1964,7 @@ async def advisor_chat_stream(request: AdvisorChatRequest):
         history_text = ""
         if request.history:
             for msg in request.history[-10:]:  # Last 10 messages for context
-                role_label = "Advisor" if msg.role == "user" else "Sage"
+                role_label = "Underwriter" if msg.role == "user" else "Woodgrove AI"
                 history_text += f"{role_label}: {msg.content}\n\n"
 
         full_message = f"SYSTEM CONTEXT:\n{system_prompt}\n\n"
