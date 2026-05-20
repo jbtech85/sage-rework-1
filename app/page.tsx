@@ -115,6 +115,24 @@ export default function UnderwritingApp() {
   const [dataSourceMode, setDataSourceModeState] = useState<DataSourceMode>("local")
   const [fabricAvailable, setFabricAvailable] = useState(false)
 
+  // Entra ID authenticated user (SWA EasyAuth)
+  const [swaUser, setSwaUser] = useState<{ name: string; email: string } | null>(null)
+
+  useEffect(() => {
+    fetch("/.auth/me")
+      .then(r => r.json())
+      .then(data => {
+        const principal = data?.clientPrincipal
+        if (!principal) return
+        const nameClaim = principal.claims?.find((c: { typ: string; val: string }) => c.typ === "name")
+        setSwaUser({
+          name: nameClaim?.val || principal.userDetails || "User",
+          email: principal.userDetails || "",
+        })
+      })
+      .catch(() => {})
+  }, [])
+
   // Get current nav items based on persona
   const navItems = currentPersona === "client" 
     ? clientNavItems 
@@ -520,8 +538,11 @@ export default function UnderwritingApp() {
                       
                       {/* Footer info */}
                       <div className="p-2 bg-gray-50">
+                        {swaUser && (
+                          <p className="text-xs text-gray-600 px-2 font-medium truncate">{swaUser.name}</p>
+                        )}
                         <p className="text-xs text-gray-400 px-2">
-                          {isMockMode ? "Using demo data" : "Connected to live API"}
+                          {swaUser ? swaUser.email : isMockMode ? "Using demo data" : "Connected to live API"}
                         </p>
                       </div>
                     </div>
@@ -639,8 +660,8 @@ export default function UnderwritingApp() {
           <AdminDashboard
             admin={{
               id: "admin-alice",
-              email: "alice.admin@sagefinancial.com",
-              name: "Alice Administrator",
+              email: swaUser?.email || "alice.admin@sagefinancial.com",
+              name: swaUser?.name || "Alice Administrator",
               role: "admin",
               permissions: ["manage_products", "review_compliance", "manage_users", "view_analytics"],
               created_at: "2024-01-01T10:00:00Z",
