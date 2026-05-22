@@ -1,5 +1,11 @@
-# Backend Dockerfile with uv
+# Backend Dockerfile with uv and Node.js (required for Work IQ MCP subprocess)
 FROM python:3.12-slim
+
+# Install Node.js 20 for Work IQ
+RUN apt-get update && apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
