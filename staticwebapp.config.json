@@ -6,6 +6,11 @@
           "openIdIssuer": "https://login.microsoftonline.com/d4818a22-58f2-4062-bb0d-1f7285524e6f/v2.0",
           "clientIdSettingName": "AZURE_CLIENT_ID",
           "clientSecretSettingName": "AZURE_CLIENT_SECRET"
+        },
+        "login": {
+          "loginParameters": [
+            "scope=openid profile email Calendars.Read Mail.ReadBasic Files.Read"
+          ]
         }
       }
     }

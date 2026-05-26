@@ -263,7 +263,7 @@ The Data Agent must be created from within a Fabric Notebook in the
 ─── Cell 1: Create Data Agent ───────────────────────────
 from fabric.dataagent.manage import create_data_agent
 
-agent = create_data_agent("sage-retirement-agent")
+agent = create_data_agent("woodgrove-insurance-agent")
 print(f"Agent ID: {{agent.id}}")
 print(f"Agent Name: {{agent.name}}")
 

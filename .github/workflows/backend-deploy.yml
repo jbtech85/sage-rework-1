@@ -67,8 +67,8 @@ jobs:
               --revision "$REVISION" \
               --query "properties.runningState" -o tsv)
             echo "Attempt $i/18 — state: $STATE"
-            if [ "$STATE" = "Running" ]; then
-              echo "Revision is running."
+            if [ "$STATE" = "Running" ] || [ "$STATE" = "ScaledToZero" ]; then
+              echo "Revision deployed successfully (state: $STATE)."
               exit 0
             elif [ "$STATE" = "Failed" ] || [ "$STATE" = "Degraded" ]; then
               echo "Revision failed to start. Check the Container App logs in the Azure portal."

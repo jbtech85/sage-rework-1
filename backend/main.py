@@ -110,7 +110,7 @@ load_dotenv()
 # Configuration
 project_endpoint = os.environ.get("PROJECT_ENDPOINT", "")
 model_deployment_name = os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4")
-agent_name = "sage-retirement-agent"
+agent_name = "woodgrove-insurance-agent"
 
 # Evaluation Configuration
 ENABLE_EVALUATIONS = True  # Enable for agent evaluation feature
