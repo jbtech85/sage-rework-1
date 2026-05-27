@@ -360,6 +360,16 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
                         }
                       : null,
                   })
+                } else if (update.data.response || accumulatedContent) {
+                  next.push({
+                    role: "assistant",
+                    content: update.data.response || accumulatedContent,
+                    timestamp: Date.now(),
+                    analysis: null,
+                    showQuickScenarios: false,
+                    evaluationContext: update.data.evaluation_context || null,
+                    consentRequest: null,
+                  })
                 }
                 return next
               })

@@ -423,47 +423,48 @@ class StreamingRetirementEventHandler(AgentEventHandler):
       self.is_complete = False
       self.run_id = None  # Capture run ID for evaluations
 
-  async def emit_status(self, status: str):
-      """Emit a status update"""
-      await self.status_queue.put({
-          "type": "status",
-          "data": {"status": status},
-          "timestamp": time.time()
-      })
 
   def on_message_delta(self, delta: MessageDeltaChunk) -> None:
       if delta.delta.content:
           for chunk in delta.delta.content:
               partial_text = chunk.text.get("value", "")
-              self._accumulated_text += partial_text
-              # Don't stream JSON content character by character
-              # Just accumulate it for final processing
+              if partial_text:
+                  self._accumulated_text += partial_text
+                  self.status_queue.put_nowait({
+                      "type": "content",
+                      "data": {"content": partial_text},
+                      "timestamp": time.time()
+                  })
+
+  def _put_status(self, status: str):
+      self.status_queue.put_nowait({
+          "type": "status",
+          "data": {"status": status},
+          "timestamp": time.time()
+      })
 
   def on_thread_run(self, run: ThreadRun) -> None:
-      # Capture run ID for evaluations
       if not self.run_id:
           self.run_id = run.id
-          
+
       if run.status == "in_progress":
-          asyncio.create_task(self.emit_status("Analyzing your financial situation..."))
+          self._put_status("Thinking...")
       elif run.status == "requires_action":
-          asyncio.create_task(self.emit_status("Fetching investment data..."))
-      elif run.status == "completed":
-          asyncio.create_task(self.emit_status("Generating personalized recommendations..."))
+          self._put_status("Looking up insurance products...")
       elif run.status == "failed":
-          asyncio.create_task(self.emit_status(f"Analysis failed: {run.last_error}"))
+          self._put_status(f"Request failed: {run.last_error}")
 
       if run.status == "requires_action" and isinstance(run.required_action, SubmitToolOutputsAction):
           tool_calls = run.required_action.submit_tool_outputs.tool_calls
           tool_outputs = []
-          
+
           for tool_call in tool_calls:
               if tool_call.function.name == "get_product_catalogue":
-                  asyncio.create_task(self.emit_status("Looking up investment products..."))
+                  self._put_status("Looking up insurance products...")
                   args = json.loads(tool_call.function.arguments) if tool_call.function.arguments else {}
                   risk = args.get("risk", "medium")
                   result = get_product_catalogue(risk)
-                  
+
                   tool_outputs.append(ToolOutput(
                       tool_call_id=tool_call.id,
                       output=result
@@ -478,19 +479,11 @@ class StreamingRetirementEventHandler(AgentEventHandler):
               )
 
   def on_run_step(self, step: RunStep) -> None:
-      step_type = step.type
-      step_status = step.status
-      
-      if step_type == "tool_calls" and step_status == "in_progress":
-          asyncio.create_task(self.emit_status("Calculating retirement projections..."))
-      elif step_type == "message_creation" and step_status == "in_progress":
-          asyncio.create_task(self.emit_status("Finalizing your personalized plan..."))
-      elif step_type == "message_creation" and step_status == "completed":
-          asyncio.create_task(self.emit_status("Analysis complete - preparing results..."))
+      if step.type == "tool_calls" and step.status == "in_progress":
+          self._put_status("Retrieving data...")
 
   def on_done(self) -> None:
       self.is_complete = True
-      asyncio.create_task(self.emit_status("Finalizing analysis..."))
 
 # Initialize components
 user_functions = {get_product_catalogue}
@@ -2078,7 +2071,15 @@ async def chat_stream(request: ChatRequest):
               
               # Wait for event processing to complete
               await event_task
-          
+
+              # Drain any remaining content/status events before sending complete
+              while not event_handler.status_queue.empty():
+                  try:
+                      remaining = event_handler.status_queue.get_nowait()
+                      yield f"data: {json.dumps(remaining)}\n\n"
+                  except asyncio.QueueEmpty:
+                      break
+
           # Send the conversational response directly
           response_text = event_handler._accumulated_text.strip()
           final_response = {
