@@ -4,8 +4,9 @@ import { mockApiResponses, mockUserProfiles, generateMockChatResponse, simulateM
 let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8172"
 const MOCK_DELAY = Number.parseInt(process.env.NEXT_PUBLIC_MOCK_DELAY || "1000")
 
-// Always start in mock mode
-let currentApiMode: ApiMode = "mock"
+// Default to live mode when a non-local API URL is configured
+const _configuredUrl = process.env.NEXT_PUBLIC_API_URL ?? ""
+let currentApiMode: ApiMode = (!_configuredUrl || _configuredUrl.includes("localhost")) ? "mock" : "live"
 let currentBackendUrl: string = API_BASE_URL
 
 export type ApiMode = "live" | "mock"
