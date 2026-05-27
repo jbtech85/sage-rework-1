@@ -105,7 +105,8 @@ export default function UnderwritingApp() {
   const [adminView, setAdminView] = useState<AdminView>("admin-dashboard")
   
   // Shared state
-  const [isMockMode, setIsMockMode] = useState(true)
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? ""
+  const [isMockMode, setIsMockMode] = useState(!apiUrl || apiUrl.includes("localhost"))
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [showProfileBubble, setShowProfileBubble] = useState(false)
