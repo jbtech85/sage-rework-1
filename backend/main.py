@@ -539,10 +539,11 @@ def setup_agent():
                       tr = existing.tool_resources
                   elif mcp_resources:
                       tr = ToolResources(mcp=mcp_resources)
+                      merged_tools = merged_tools + mcp_tools
                   else:
                       tr = None
 
-                  print(f"Updating existing agent {existing.id} — {len(merged_tools)} tools ({len(preserved)} preserved from portal)")
+                  print(f"Updating existing agent {existing.id} — {len(merged_tools)} tools ({len(preserved)} preserved from portal, {len(mcp_tools)} MCP)")
                   return agents_client.update_agent(
                       agent_id=existing.id,
                       model=model_deployment_name,
