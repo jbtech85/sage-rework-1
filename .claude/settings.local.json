@@ -6,7 +6,8 @@
       "Bash(findstr workflow *)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\okria\\\\Coding\\\\3Sharp\\\\sage-rework-1\" -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
-      "Bash(Format-Table -AutoSize)"
+      "Bash(Format-Table -AutoSize)",
+      "WebSearch"
     ]
   }
 }

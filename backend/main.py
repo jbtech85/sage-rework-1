@@ -32,27 +32,6 @@ from storage import (
     ScenarioShareRecord,
 )
 
-# WorkIQ MCP integration (optional, graceful fallback)
-try:
-    from workiq_service import (
-        prefetch_workiq_background,
-        prefetch_workiq_context,
-        get_cached_context,
-        get_cached_meetings,
-        get_cached_emails,
-        get_cached_calendar,
-        query_workiq,
-        WORKIQ_MODE,
-    )
-except ImportError:
-    WORKIQ_MODE = "disabled"
-    async def prefetch_workiq_background(): pass
-    async def prefetch_workiq_context(): return {}
-    def get_cached_context(): return {"workiq_enabled": False, "workiq_mode": "disabled"}
-    def get_cached_meetings(): return None
-    def get_cached_emails(): return None
-    def get_cached_calendar(): return None
-    async def query_workiq(q, k=None): return {"success": False, "error": "WorkIQ not available"}
 
 # Fabric Data Agent integration (optional, graceful fallback)
 try:
@@ -69,6 +48,7 @@ from azure.ai.agents.models import (
   AgentEventHandler,
   FunctionTool,
   ListSortOrder,
+  McpTool,
   MessageDeltaChunk,
   RequiredFunctionToolCall,
   RunStep,
@@ -77,6 +57,7 @@ from azure.ai.agents.models import (
   ThreadMessage,
   ThreadRun,
   ToolOutput,
+  ToolResources,
   CodeInterpreterTool
 )
 
@@ -633,34 +614,78 @@ def setup_agent():
   """Initialize or find the insurance underwriting agent"""
   try:
       functions = FunctionTool(user_functions)
-      tools = functions.definitions
-      
+      base_tools = list(functions.definitions)
+
       try:
           code_interpreter = CodeInterpreterTool()
-          tools.extend(code_interpreter.definitions)
+          base_tools.extend(code_interpreter.definitions)
       except Exception as e:
           print(f"CodeInterpreter not available: {e}")
-      
+
+      # Build Work IQ MCP tools for M365 calendar and mail context
+      mcp_tools = []
+      mcp_resources = []
+      try:
+          copilot = McpTool(
+              server_label="work_iq_copilot",
+              server_url="https://agent365.svc.cloud.microsoft/agents/servers/mcp_M365Copilot",
+          )
+          copilot.set_approval_mode("never")
+          calendar = McpTool(
+              server_label="work_iq_calendar",
+              server_url="https://agent365.svc.cloud.microsoft/agents/servers/mcp_M365Calendar",
+          )
+          calendar.set_approval_mode("never")
+          mcp_tools = list(copilot.definitions) + list(calendar.definitions)
+          mcp_resources = list(copilot.resources.mcp or []) + list(calendar.resources.mcp or [])
+          print("Work IQ MCP tools ready: Work IQ Copilot, Work IQ Calendar")
+      except Exception as e:
+          print(f"Work IQ MCP tools not available: {e}")
+
       # Try to find existing agent
       try:
           agents = agents_client.list_agents()
-          for existing_agent in agents:
-              if existing_agent.name == agent_name:
+          for existing in agents:
+              if existing.name == agent_name:
+                  existing_tools = list(existing.tools or [])
+
+                  # Preserve portal-configured tools (e.g. MCP with connection auth);
+                  # replace only function/code_interpreter definitions with current code.
+                  preserved = [t for t in existing_tools if t.type not in ("function", "code_interpreter")]
+                  merged_tools = base_tools + preserved
+
+                  # If the existing agent already has MCP resources, keep them intact
+                  # (they carry the Foundry connection reference set via the portal).
+                  # Only inject our mcp_resources when creating a fresh agent.
+                  has_existing_mcp = any(t.type == "mcp" for t in existing_tools)
+                  if has_existing_mcp and existing.tool_resources:
+                      tr = existing.tool_resources
+                  elif mcp_resources:
+                      tr = ToolResources(mcp=mcp_resources)
+                  else:
+                      tr = None
+
+                  print(f"Updating existing agent {existing.id} — {len(merged_tools)} tools ({len(preserved)} preserved from portal)")
                   return agents_client.update_agent(
-                      agent_id=existing_agent.id,
+                      agent_id=existing.id,
                       model=model_deployment_name,
                       instructions=SYSTEM_INSTRUCTIONS,
-                      tools=tools,
+                      tools=merged_tools,
+                      tool_resources=tr,
                   ), functions
       except Exception as e:
           print(f"Could not list agents: {e}")
-      
-      # Create new agent
+
+      # Create new agent with all tools including Work IQ MCP
+      all_tools = base_tools + mcp_tools
+      tr = ToolResources(mcp=mcp_resources) if mcp_resources else None
+      print(f"Creating new agent '{agent_name}' with {len(all_tools)} tools")
       new_agent = agents_client.create_agent(
           model=model_deployment_name,
           name=agent_name,
           instructions=SYSTEM_INSTRUCTIONS,
-          tools=tools,
+          tools=all_tools,
+          tool_resources=tr,
       )
       return new_agent, functions
   except Exception as e:
@@ -1234,67 +1259,6 @@ async def generate_pre_meeting_brief_endpoint(request: PreMeetingBriefRequest):
         print(f"Pre-meeting brief error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# ─── WorkIQ MCP Integration ──────────────────────────────────────────────────
-
-@app.post("/advisor/workiq/prefetch")
-async def workiq_prefetch():
-    """
-    Trigger background pre-fetch of WorkIQ context (calendar, emails, files).
-    Called on app startup to warm the cache. Non-blocking.
-    """
-    if WORKIQ_MODE == "disabled":
-        return {"status": "disabled", "message": "WorkIQ integration is disabled"}
-    
-    await prefetch_workiq_background()
-    return {"status": "started", "message": "WorkIQ prefetch started in background"}
-
-
-@app.get("/advisor/workiq/context")
-async def workiq_get_context():
-    """
-    Get cached WorkIQ context. Returns empty values if cache is cold or WorkIQ unavailable.
-    Frontend uses this to enrich advisor views without blocking.
-    """
-    return get_cached_context()
-
-
-@app.get("/advisor/workiq/meetings")
-async def workiq_get_meetings():
-    """Get cached Sage meeting info for appointments view."""
-    return {
-        "workiq_enabled": WORKIQ_MODE != "disabled",
-        "workiq_mode": WORKIQ_MODE,
-        "data": get_cached_meetings(),
-    }
-
-
-@app.get("/advisor/workiq/emails")
-async def workiq_get_emails():
-    """Get cached Sage email subjects for escalations view."""
-    return {
-        "workiq_enabled": WORKIQ_MODE != "disabled",
-        "workiq_mode": WORKIQ_MODE,
-        "data": get_cached_emails(),
-    }
-
-
-class WorkIQQueryRequest(BaseModel):
-    question: str
-    cache_key: Optional[str] = None
-
-
-@app.post("/advisor/workiq/query")
-async def workiq_query(request: WorkIQQueryRequest):
-    """
-    On-demand WorkIQ query with optional caching.
-    Use sparingly - prefer prefetched cache for UI responsiveness.
-    """
-    if WORKIQ_MODE == "disabled":
-        return {"success": False, "error": "WorkIQ disabled", "response": None}
-    
-    result = await query_workiq(request.question, request.cache_key)
-    return result
 
 
 class ScenarioAnalysisRequest(BaseModel):
