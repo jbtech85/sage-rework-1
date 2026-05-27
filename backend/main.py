@@ -2079,125 +2079,14 @@ async def chat_stream(request: ChatRequest):
               # Wait for event processing to complete
               await event_task
           
-          # Process the complete response
-          response_text = event_handler._accumulated_text
-          
-          # Send status update for JSON parsing
-          parsing_status = {
-              "type": "status",
-              "data": {"status": "Processing analysis results..."},
-              "timestamp": time.time()
-          }
-          yield f"data: {json.dumps(parsing_status)}\n\n"
-          
-          # Try to parse analysis from response
-          try:
-              # Clean up the response text first
-              response_text = response_text.strip()
-              
-              # Try to find JSON in the response
-              json_start = response_text.find('{')
-              json_end = response_text.rfind('}') + 1
-              
-              if json_start != -1 and json_end > json_start:
-                  json_str = response_text[json_start:json_end]
-                  
-                  # Clean up common JSON formatting issues
-                  json_str = json_str.replace(',\n}', '\n}')  # Remove trailing commas before closing braces
-                  json_str = json_str.replace(',\n]', '\n]')  # Remove trailing commas before closing brackets
-                  json_str = json_str.replace(', }', ' }')    # Remove trailing commas with spaces
-                  json_str = json_str.replace(', ]', ' ]')    # Remove trailing commas with spaces
-                  
-                  # Try to parse and validate the JSON
-                  analysis_dict = json.loads(json_str)
-                  # Enforce cashflow horizon before validation
-                  try:
-                      if isinstance(analysis_dict, dict):
-                          cf = (((analysis_dict.get("predictions") or {}).get("cashflows")) or [])
-                          analysis_dict.setdefault("predictions", {})
-                          analysis_dict["predictions"]["cashflows"] = enforce_cashflow_horizon(cf)
-                  except Exception as _e:
-                      print(f"Cashflow enforcement warning: {_e}")
-                  
-                  # Check if the response matches our expected schema structure
-                  if not isinstance(analysis_dict, dict):
-                      raise ValueError("Response is not a JSON object")
-                  
-                  # Try to create AnalysisOutput - this will validate the structure
-                  analysis_data = AnalysisOutput(**analysis_dict)
-                  # Log key metrics to console
-                  log_key_metrics(analysis_data)
-                  
-                  # Send analysis data as structured object
-                  analysis_update = {
-                      "type": "analysis",
-                      "data": {"analysis": analysis_data.model_dump()},
-                      "timestamp": time.time()
-                  }
-                  yield f"data: {json.dumps(analysis_update)}\n\n"
-              else:
-                  # Try parsing the entire response as JSON
-                  try:
-                      # Clean up the entire response
-                      cleaned_response = response_text.replace(',\n}', '\n}').replace(',\n]', '\n]')
-                      analysis_dict = json.loads(cleaned_response)
-                      try:
-                          if isinstance(analysis_dict, dict):
-                              cf = (((analysis_dict.get("predictions") or {}).get("cashflows")) or [])
-                              analysis_dict.setdefault("predictions", {})
-                              analysis_dict["predictions"]["cashflows"] = enforce_cashflow_horizon(cf)
-                      except Exception as _e:
-                          print(f"Cashflow enforcement warning: {_e}")
-                      analysis_data = AnalysisOutput(**analysis_dict)
-                      log_key_metrics(analysis_data)
-                      
-                      # Send analysis data as structured object
-                      analysis_update = {
-                          "type": "analysis",
-                          "data": {"analysis": analysis_data.dict()},
-                          "timestamp": time.time()
-                      }
-                      yield f"data: {json.dumps(analysis_update)}\n\n"
-                  except Exception as fallback_error:
-                      print(f"Fallback JSON parsing also failed: {fallback_error}")
-                      # If all JSON parsing fails, send an error status
-                      error_status = {
-                          "type": "status",
-                          "data": {"status": "The AI response format is invalid. Please try a different question."},
-                          "timestamp": time.time()
-                      }
-                      yield f"data: {json.dumps(error_status)}\n\n"
-                      
-          except (json.JSONDecodeError, ValidationError) as e:
-              print(f"Could not parse analysis JSON: {e}")
-              print(f"Raw response: {response_text[:1000]}...")  # Log first 1000 chars for debugging
-              
-              # Try to provide a more helpful error message
-              if isinstance(e, json.JSONDecodeError):
-                  error_msg = f"JSON formatting error at line {e.lineno}, column {e.colno}"
-              elif isinstance(e, ValidationError):
-                  error_msg = f"Response structure doesn't match expected format: {str(e)[:100]}"
-              else:
-                  error_msg = f"Parsing failed: {str(e)[:100]}"
-              
-              # Send error status with helpful message
-              error_status = {
-                  "type": "status", 
-                  "data": {"status": f"Analysis parsing failed: {error_msg}. Please try again."},
-                  "timestamp": time.time()
-              }
-              yield f"data: {json.dumps(error_status)}\n\n"
-              
-              # Set analysis_data to None so we don't send invalid data
-              analysis_data = None
-          
-          # Send final completion
+          # Send the conversational response directly
+          response_text = event_handler._accumulated_text.strip()
           final_response = {
               "type": "complete",
               "data": {
-                  "response": "Analysis completed successfully" if analysis_data else "Analysis completed with issues",
-                  "analysis": analysis_data.model_dump() if analysis_data else None,
-                  "status": "completed" if analysis_data else "partial",
+                  "response": response_text,
+                  "analysis": None,
+                  "status": "completed",
                   "evaluation_context": {
                       "thread_id": thread_id,
                       "run_id": event_handler.run_id
@@ -2298,27 +2187,9 @@ async def chat_endpoint(request: ChatRequest):
       
       response_text = handler.response
       
-      # Try to parse JSON analysis from response
-      try:
-          json_start = response_text.find('{')
-          json_end = response_text.rfind('}') + 1
-          if json_start != -1 and json_end > json_start:
-              json_str = response_text[json_start:json_end]
-              analysis_dict = json.loads(json_str)
-              try:
-                  cf = (((analysis_dict.get("predictions") or {}).get("cashflows")) or [])
-                  analysis_dict.setdefault("predictions", {})
-                  analysis_dict["predictions"]["cashflows"] = enforce_cashflow_horizon(cf)
-              except Exception as _e:
-                  print(f"Cashflow enforcement warning: {_e}")
-              analysis_data = AnalysisOutput(**analysis_dict)
-              log_key_metrics(analysis_data)
-      except (json.JSONDecodeError, ValidationError) as e:
-          print(f"Could not parse analysis JSON: {e}")
-      
       return ChatResponse(
           response=response_text,
-          analysis=analysis_data,
+          analysis=None,
           status="completed"
       )
       
