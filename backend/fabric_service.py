@@ -40,12 +40,6 @@ warnings.filterwarnings(
     message=r".*Assistants API is deprecated.*"
 )
 
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
-
 logger = logging.getLogger("fabric_service")
 
 

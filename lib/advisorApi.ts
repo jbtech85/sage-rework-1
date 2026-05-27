@@ -16,7 +16,7 @@ import type {
   Appointment,
 } from './types'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8172'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ''
 
 const MOCK_SHARED_SCENARIOS_KEY = "mock_shared_scenarios"
 const MOCK_ESCALATIONS_KEY = "mock_escalations"

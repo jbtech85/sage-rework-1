@@ -1,7 +1,7 @@
 import { mockApiResponses, mockUserProfiles, generateMockChatResponse, simulateMockStreaming, generateMockProjection } from "./mockData"
 
 // API Configuration
-let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8172"
+let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
 const MOCK_DELAY = Number.parseInt(process.env.NEXT_PUBLIC_MOCK_DELAY || "1000")
 
 // Default to live mode when a non-local API URL is configured

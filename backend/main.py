@@ -16,7 +16,6 @@ from pathlib import Path
 from urllib import request as urllib_request
 from urllib import error as urllib_error
 
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -85,8 +84,6 @@ except ImportError:
     ToolCallAccuracyEvaluator = MockEvaluator
     TaskAdherenceEvaluator = MockEvaluator
     AIAgentConverter = MockEvaluator
-
-load_dotenv()
 
 # Configuration
 project_endpoint = os.environ.get("PROJECT_ENDPOINT", "")
@@ -2818,5 +2815,3 @@ async def delete_saved_scenario(user_id: str, scenario_id: str):
     return {"message": "Scenario deleted"}
 
 
-if __name__ == "__main__":
-  uvicorn.run(app, host="0.0.0.0", port=8172)
