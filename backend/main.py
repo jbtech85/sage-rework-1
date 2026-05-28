@@ -16,11 +16,10 @@ from pathlib import Path
 from urllib import request as urllib_request
 from urllib import error as urllib_error
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request as FastAPIRequest
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, ValidationError
-import uvicorn
 
 # Storage imports
 from storage import (
@@ -48,6 +47,7 @@ from azure.ai.agents.models import (
   FunctionTool,
   ListSortOrder,
   McpTool,
+  MCPToolResource,
   MessageDeltaChunk,
   RequiredFunctionToolCall,
   RunStep,
@@ -1917,7 +1917,7 @@ async def evaluate_run(thread_id: str, run_id: str):
       raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
 
 @app.post("/chat/stream")
-async def chat_stream(request: ChatRequest):
+async def chat_stream(request: ChatRequest, http_request: FastAPIRequest):
   """Streaming chat endpoint with real-time status updates"""
   use_fabric = (request.data_source == "fabric")
 
@@ -2033,16 +2033,30 @@ async def chat_stream(request: ChatRequest):
           content=json.dumps(payload)
       )
       
+      # Build per-run MCP resources with the signed-in user's token so Work IQ
+      # can access their M365 calendar and email data.
+      user_token = http_request.headers.get("x-ms-token-aad-access-token")
+      if user_token:
+          run_tool_resources = ToolResources(mcp=[
+              MCPToolResource(server_label="work_iq_copilot", headers={"Authorization": f"Bearer {user_token}"}, require_approval="never"),
+              MCPToolResource(server_label="work_iq_calendar", headers={"Authorization": f"Bearer {user_token}"}, require_approval="never"),
+          ])
+          print("Work IQ: using user identity token for this run")
+      else:
+          run_tool_resources = None
+          print("Work IQ: no user token available (SWA Linked Backend not connected?)")
+
       async def generate_stream():
           event_handler = StreamingRetirementEventHandler(functions)
           response_text = ""
           analysis_data = None
-          
+
           # Start the streaming run
           with agents_client.runs.stream(
               thread_id=thread_id,
               agent_id=agent.id,
-              event_handler=event_handler
+              event_handler=event_handler,
+              tool_resources=run_tool_resources,
           ) as stream:
               
               # Process events in a separate task
