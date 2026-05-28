@@ -2065,7 +2065,7 @@ async def chat_stream(request: ChatRequest, http_request: FastAPIRequest):
               tool_resources=run_tool_resources,
           )
           if run_tool_resources is None:
-              stream_kwargs["tools"] = [functions]
+              stream_kwargs["tools"] = list(functions.definitions)
 
           with agents_client.runs.stream(**stream_kwargs) as stream:
               
