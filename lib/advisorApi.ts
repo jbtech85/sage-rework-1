@@ -969,11 +969,7 @@ export const MOCK_WORKIQ_CONTEXT: WorkIQContext = {
  * Call this on app startup to warm the cache.
  */
 export async function prefetchWorkIQContext(): Promise<void> {
-  try {
-    await fetch(`${API_BASE_URL}/advisor/workiq/prefetch`, { method: 'POST' })
-  } catch (e) {
-    console.warn('WorkIQ prefetch failed:', e)
-  }
+  // Endpoint removed — no-op until Work IQ MSAL integration is implemented
 }
 
 /**

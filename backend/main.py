@@ -2054,13 +2054,20 @@ async def chat_stream(request: ChatRequest, http_request: FastAPIRequest):
           response_text = ""
           analysis_data = None
 
-          # Start the streaming run
-          with agents_client.runs.stream(
+          # Start the streaming run.
+          # When no user token is available, override tools to exclude Work IQ
+          # MCP servers — without a Bearer token they return 424 at init and
+          # fail the entire run before the agent can generate any response.
+          stream_kwargs = dict(
               thread_id=thread_id,
               agent_id=agent.id,
               event_handler=event_handler,
               tool_resources=run_tool_resources,
-          ) as stream:
+          )
+          if run_tool_resources is None:
+              stream_kwargs["tools"] = [functions]
+
+          with agents_client.runs.stream(**stream_kwargs) as stream:
               
               # Process events in a separate task
               async def process_events():

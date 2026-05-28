@@ -117,23 +117,7 @@ export default function UnderwritingApp() {
   const [dataSourceMode, setDataSourceModeState] = useState<DataSourceMode>("local")
   const [fabricAvailable, setFabricAvailable] = useState(false)
 
-  // Entra ID authenticated user (SWA EasyAuth)
-  const [swaUser, setSwaUser] = useState<{ name: string; email: string } | null>(null)
-
-  useEffect(() => {
-    fetch("/.auth/me")
-      .then(r => r.json())
-      .then(data => {
-        const principal = data?.clientPrincipal
-        if (!principal) return
-        const nameClaim = principal.claims?.find((c: { typ: string; val: string }) => c.typ === "name")
-        setSwaUser({
-          name: nameClaim?.val || principal.userDetails || "User",
-          email: principal.userDetails || "",
-        })
-      })
-      .catch(() => {})
-  }, [])
+  const [swaUser] = useState<{ name: string; email: string } | null>(null)
 
   // Get current nav items based on persona
   const navItems = currentPersona === "client" 
