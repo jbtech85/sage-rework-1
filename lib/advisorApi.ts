@@ -429,7 +429,9 @@ export async function streamAdvisorChat(
   request: AdvisorChatRequest,
   onUpdate: (content: string, isComplete: boolean, citations?: AdvisorChatCitation[]) => void
 ): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/advisor/chat/stream`, {
+  // Route through Next.js API proxy so the server-side OBO token exchange
+  // can attach a Work IQ-scoped token before forwarding to the backend.
+  const response = await fetch(`/api/advisor/chat/stream`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
