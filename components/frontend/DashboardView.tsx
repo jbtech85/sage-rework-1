@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import {
   TrendingUp,
   TrendingDown,
@@ -188,8 +188,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const firstName = selectedProfile?.name.split(" ")[0] || "there"
   const goal = portfolio.retirementGoal
-  const currentHour = new Date().getHours()
-  const greeting = currentHour < 12 ? "Good morning" : currentHour < 17 ? "Good afternoon" : "Good evening"
+  const [greeting, setGreeting] = useState("Good morning")
+  useEffect(() => {
+    const hour = new Date().getHours()
+    setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening")
+  }, [])
 
   return (
     <div className="h-full overflow-y-auto">

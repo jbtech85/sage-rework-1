@@ -334,6 +334,10 @@ const BriefMeModal: React.FC<BriefMeModalProps> = ({ advisor, onClose, isMockMod
   const [isLoading, setIsLoading] = useState(true)
   const [briefContent, setBriefContent] = useState("")
   const [workiqContext, setWorkiqContext] = useState<WorkIQContext | null>(null)
+  const [dateStr, setDateStr] = useState("")
+  useEffect(() => {
+    setDateStr(new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }))
+  }, [])
 
   useEffect(() => {
     if (isMockMode) {
@@ -434,7 +438,7 @@ const BriefMeModal: React.FC<BriefMeModalProps> = ({ advisor, onClose, isMockMod
                   <h2 className="text-lg font-semibold text-white">Daily Briefing</h2>
                   <PoweredByLabel product="Work IQ" variant="dark" />
                 </div>
-                <p className="text-sm text-gray-400">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</p>
+                <p className="text-sm text-gray-400">{dateStr}</p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
@@ -633,9 +637,11 @@ export const AdvisorDashboard: React.FC<AdvisorDashboardProps> = ({
     return clients.filter(c => c.status !== "healthy").slice(0, 5)
   }, [clients])
 
-  // Current greeting
-  const currentHour = new Date().getHours()
-  const greeting = currentHour < 12 ? "Good morning" : currentHour < 17 ? "Good afternoon" : "Good evening"
+  const [greeting, setGreeting] = useState("Good morning")
+  useEffect(() => {
+    const hour = new Date().getHours()
+    setGreeting(hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening")
+  }, [])
 
   // AUM chart state
   const [aumTimeRange, setAumTimeRange] = useState<TimeRange>("1M")
