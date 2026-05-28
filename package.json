@@ -6,7 +6,7 @@
     "build": "next build",
     "dev": "next dev -p 3847",
     "lint": "next lint",
-    "start": "next start -p 3847",
+    "start": "next start",
     "dev:full": "concurrently \"npm run dev\" \"npm run backend:dev\"",
     "backend:dev": "cd backend && uv run python main.py",
     "backend:install": "cd backend && uv sync",
