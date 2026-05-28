@@ -723,9 +723,12 @@ from admin_routes import router as admin_router
 app.include_router(advisor_router)
 app.include_router(admin_router)
 
+_cors_origins = os.environ.get("CORS_ORIGINS", "https://wonderful-sand-0867c671e.7.azurestaticapps.net")
+allowed_origins = [o.strip() for o in _cors_origins.split(",")]
+
 app.add_middleware(
   CORSMiddleware,
-  allow_origins=["*"],
+  allow_origins=allowed_origins,
   allow_credentials=True,
   allow_methods=["*"],
   allow_headers=["*"],
