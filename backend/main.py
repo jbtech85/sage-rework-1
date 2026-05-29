@@ -529,6 +529,8 @@ def setup_agent():
                   # Preserve portal-configured tools (e.g. MCP with connection auth);
                   # replace only function/code_interpreter definitions with current code.
                   preserved = [t for t in existing_tools if t.type not in ("function", "code_interpreter")]
+                  for t in preserved:
+                      print(f"Preserved tool: type={t.type} label={getattr(t, 'server_label', 'N/A')}")
                   merged_tools = base_tools + preserved
 
                   # If the existing agent already has MCP resources, keep them intact
