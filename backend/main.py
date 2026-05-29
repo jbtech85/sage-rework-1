@@ -2041,6 +2041,10 @@ async def chat_stream(request: ChatRequest, http_request: FastAPIRequest):
       # Build per-run MCP resources with the signed-in user's token so Work IQ
       # can access their M365 calendar and email data.
       user_token = http_request.headers.get("x-ms-token-aad-access-token")
+      if agent:
+          for t in (agent.tools or []):
+              if t.type == "mcp":
+                  print(f"Agent MCP tool: label={getattr(t, 'server_label', 'N/A')}")
       if user_token:
           run_tool_resources = ToolResources(mcp=[
               MCPToolResource(server_label="work_iq_copilot", headers={"Authorization": f"Bearer {user_token}"}, require_approval="never"),
