@@ -503,14 +503,15 @@ def setup_agent():
       mcp_tools = []
       mcp_resources = []
       try:
+          workiq_tenant_id = os.environ.get("AZURE_TENANT_ID", "")
           copilot = McpTool(
               server_label="work_iq_copilot",
-              server_url="https://agent365.svc.cloud.microsoft/agents/servers/mcp_M365Copilot",
+              server_url=f"https://agent365.svc.cloud.microsoft/agents/tenants/{workiq_tenant_id}/servers/mcp_M365Copilot",
           )
           copilot.set_approval_mode("never")
           calendar = McpTool(
               server_label="work_iq_calendar",
-              server_url="https://agent365.svc.cloud.microsoft/agents/servers/mcp_M365Calendar",
+              server_url=f"https://agent365.svc.cloud.microsoft/agents/tenants/{workiq_tenant_id}/servers/mcp_M365Calendar",
           )
           calendar.set_approval_mode("never")
           mcp_tools = list(copilot.definitions) + list(calendar.definitions)
@@ -2041,10 +2042,6 @@ async def chat_stream(request: ChatRequest, http_request: FastAPIRequest):
       # Build per-run MCP resources with the signed-in user's token so Work IQ
       # can access their M365 calendar and email data.
       user_token = http_request.headers.get("x-ms-token-aad-access-token")
-      if agent:
-          for t in (agent.tools or []):
-              if t.type == "mcp":
-                  print(f"Agent MCP tool: label={getattr(t, 'server_label', 'N/A')}")
       if user_token:
           run_tool_resources = ToolResources(mcp=[
               MCPToolResource(server_label="work_iq_copilot", headers={"Authorization": f"Bearer {user_token}"}, require_approval="never"),

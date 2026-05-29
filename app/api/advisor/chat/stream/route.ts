@@ -3,7 +3,7 @@ import { NextRequest } from "next/server"
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ""
 const TENANT_ID = process.env.AZURE_TENANT_ID || ""
 const CLIENT_ID = process.env.AZURE_CLIENT_ID || ""
-const CLIENT_SECRET = process.env.AZURE_CLIENT_SECRET || ""
+const CLIENT_SECRET = process.env.MICROSOFT_PROVIDER_AUTHENTICATION_SECRET || ""
 
 // Delegated scope for Work IQ — audience is api://workiq.svc.cloud.microsoft
 const WORK_IQ_SCOPE = "api://workiq.svc.cloud.microsoft/WorkIQAgent.Ask"
