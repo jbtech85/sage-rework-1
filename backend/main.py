@@ -404,7 +404,6 @@ def _run_agent_stream(input_messages: list, previous_response_id: str | None) ->
     create_kwargs = dict(
         input=input_messages,
         stream=True,
-        tools=[PRODUCT_CATALOGUE_TOOL],
         extra_body={"agent_reference": {"name": agent_name, "type": "agent_reference"}},
     )
     if previous_response_id:
@@ -433,13 +432,33 @@ def _run_agent_stream(input_messages: list, previous_response_id: str | None) ->
     return events, response_id
 
 
+def _build_product_catalogue_context() -> str:
+    """Returns a compact product catalogue string for inclusion in messages."""
+    lines = ["Available insurance products by risk level:"]
+    for risk in ("low", "medium", "high"):
+        data = json.loads(get_product_catalogue(risk))
+        for p in data.get("products", []):
+            name = p.get("name", "")
+            desc = p.get("description", "")
+            if name:
+                lines.append(f"- [{risk.upper()}] {name}: {desc}")
+    return "\n".join(lines)
+
+
 def stream_agent_response(session_id: str, user_message: str):
     """
     Synchronous generator that streams SSE event dicts for a user message.
-    Handles function tool calls in a loop until the agent is done.
+    Product catalogue is injected into context rather than called as a tool.
     """
     previous_response_id = conversation_manager.get_previous_response_id(session_id)
-    current_input = [{"role": "user", "content": user_message}]
+
+    product_keywords = ("product", "coverage", "plan", "policy", "insurance", "recommend", "suggest", "catalogue")
+    include_catalogue = any(kw in user_message.lower() for kw in product_keywords)
+    message_content = user_message
+    if include_catalogue:
+        message_content = f"{user_message}\n\n{_build_product_catalogue_context()}"
+
+    current_input = [{"role": "user", "content": message_content}]
 
     yield {"type": "status", "data": {"status": "Thinking..."}}
 
@@ -450,34 +469,9 @@ def stream_agent_response(session_id: str, user_message: str):
             conversation_manager.set_last_response_id(session_id, response_id)
             previous_response_id = response_id
 
-        tool_calls = [e for e in events if e["type"] == "_tool_call"]
         for e in events:
-            if e["type"] != "_tool_call":
-                yield e
-
-        if not tool_calls:
-            break
-
-        # Execute function tool calls and loop back with outputs
-        tool_outputs = []
-        for tc_event in tool_calls:
-            tc = tc_event["item"]
-            name = getattr(tc, "name", "")
-            call_id = getattr(tc, "call_id", getattr(tc, "id", ""))
-            arguments = getattr(tc, "arguments", "{}")
-            if name == "get_product_catalogue":
-                yield {"type": "status", "data": {"status": "Looking up insurance products..."}}
-                args = json.loads(arguments) if arguments else {}
-                result = get_product_catalogue(args.get("risk", "medium"))
-                tool_outputs.append({
-                    "type": "function_call_output",
-                    "call_id": call_id,
-                    "output": result,
-                })
-
-        if not tool_outputs:
-            break
-        current_input = tool_outputs
+            yield e
+        break
 
 # FastAPI app
 app = FastAPI(title="Insurance Underwriting API", version="1.0.0")
