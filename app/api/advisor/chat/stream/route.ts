@@ -38,6 +38,23 @@ async function exchangeOBO(userToken: string): Promise<string | null> {
   return data.access_token ?? null
 }
 
+function logTokenClaims(token: string) {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString("utf-8"))
+    console.log("OBO assertion token claims:", JSON.stringify({
+      aud: payload.aud,
+      iss: payload.iss,
+      appid: payload.appid,
+      azp: payload.azp,
+      ver: payload.ver,
+      upn: payload.upn ?? payload.preferred_username,
+      exp: payload.exp,
+    }))
+  } catch {
+    console.log("OBO assertion: could not decode token (length:", token.length, ")")
+  }
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.text()
 
@@ -50,6 +67,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (userToken) {
+    logTokenClaims(userToken)
     const workIQToken = await exchangeOBO(userToken)
     if (workIQToken) {
       // Pass the Work IQ-scoped token so the backend can authenticate MCP calls
