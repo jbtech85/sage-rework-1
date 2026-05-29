@@ -39,66 +39,21 @@ except ImportError:
     fabric_client = None
     def build_fabric_enriched_prompt(*a, **kw): return ""
 
-# Azure AI Agents imports
+# Azure AI Projects imports
 from azure.identity import DefaultAzureCredential, AzureCliCredential
-from azure.ai.agents import AgentsClient
-from azure.ai.agents.models import (
-  AgentEventHandler,
-  FunctionTool,
-  ListSortOrder,
-  McpTool,
-  MCPToolResource,
-  MessageDeltaChunk,
-  RequiredFunctionToolCall,
-  RunStep,
-  RunStepDeltaChunk,
-  SubmitToolOutputsAction,
-  ThreadMessage,
-  ThreadRun,
-  ToolOutput,
-  ToolResources,
-  CodeInterpreterTool
-)
+from azure.ai.projects import AIProjectClient
 
-# Azure AI Evaluation imports - handle optional dependency
-try:
-    from azure.ai.evaluation import (
-      AIAgentConverter,
-      ToolCallAccuracyEvaluator,
-      AzureOpenAIModelConfiguration,
-      IntentResolutionEvaluator,
-      TaskAdherenceEvaluator,
-      evaluate
-    )
-    EVALUATIONS_AVAILABLE = True
-except ImportError:
-    print("Azure AI Evaluation not available - using mock evaluations")
-    EVALUATIONS_AVAILABLE = False
-    # Create mock classes for type hints
-    class MockEvaluator:
-        def __init__(self, **kwargs): pass
-        def __call__(self, **kwargs): return {"mock": True}
-    
-    AzureOpenAIModelConfiguration = MockEvaluator
-    IntentResolutionEvaluator = MockEvaluator
-    ToolCallAccuracyEvaluator = MockEvaluator
-    TaskAdherenceEvaluator = MockEvaluator
-    AIAgentConverter = MockEvaluator
+# Evaluation imports - graceful fallback
+EVALUATIONS_AVAILABLE = False
 
 # Configuration
 project_endpoint = os.environ.get("PROJECT_ENDPOINT", "")
-model_deployment_name = os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-4")
-agent_name = "woodgrove-insurance-agent"
-
-# Evaluation Configuration
-ENABLE_EVALUATIONS = True  # Enable for agent evaluation feature
+agent_name = os.environ.get("AGENT_NAME", "woodgrove-webinterface-agent-2")
 
 # Data directory path
 DATA_DIR = Path(__file__).parent / "data"
 
-# Initialize Azure AI client
-# In production (containers), use DefaultAzureCredential which picks up Managed Identity.
-# Locally, use AzureCliCredential with DEMO_TENANT_ID if set (for cross-tenant dev).
+# Initialize Azure AI Projects client
 environment = os.environ.get("ENVIRONMENT", "development")
 demo_tenant_id = os.environ.get("DEMO_TENANT_ID", "")
 if environment == "production":
@@ -109,10 +64,10 @@ elif demo_tenant_id:
     credential = AzureCliCredential(tenant_id=demo_tenant_id)
 else:
     credential = DefaultAzureCredential()
-agents_client = AgentsClient(
-  endpoint=project_endpoint,
-  credential=credential,
-)
+
+project_client = AIProjectClient(endpoint=project_endpoint, credential=credential)
+openai_client = project_client.get_openai_client()
+print(f"Azure AI Projects client initialised — agent: {agent_name}")
 
 # Load data from JSON files
 def load_user_profiles():
@@ -397,324 +352,134 @@ If you cannot find real data via the tools, say so clearly — do not fabricate 
 
 
 
-# Thread Management
-class ThreadManager:
-  def __init__(self, agents_client: AgentsClient):
-      self.agents_client = agents_client
-      self.threads = {}
-  
-  def get_or_create_thread(self, session_id: str) -> str:
-      if session_id not in self.threads:
-          thread = self.agents_client.threads.create()
-          self.threads[session_id] = thread.id
-      return self.threads[session_id]
+# Conversation management — stores the last response ID per session for context continuity
+class ConversationManager:
+    def __init__(self):
+        self._last_response_ids: dict = {}
 
-# Streaming Event Handler
-class StreamingRetirementEventHandler(AgentEventHandler):
-  def __init__(self, functions: FunctionTool):
-      super().__init__()
-      self.functions = functions
-      self._accumulated_text = ""
-      self.status_queue = asyncio.Queue()
-      self.current_status = "Starting analysis..."
-      self.is_complete = False
-      self.run_id = None  # Capture run ID for evaluations
+    def get_previous_response_id(self, session_id: str):
+        return self._last_response_ids.get(session_id)
 
+    def set_last_response_id(self, session_id: str, response_id: str) -> None:
+        self._last_response_ids[session_id] = response_id
 
-  def on_message_delta(self, delta: MessageDeltaChunk) -> None:
-      if delta.delta.content:
-          for chunk in delta.delta.content:
-              partial_text = chunk.text.get("value", "")
-              if partial_text:
-                  self._accumulated_text += partial_text
-                  self.status_queue.put_nowait({
-                      "type": "content",
-                      "data": {"content": partial_text},
-                      "timestamp": time.time()
-                  })
+    def clear(self, session_id: str) -> None:
+        self._last_response_ids.pop(session_id, None)
 
-  def _put_status(self, status: str):
-      self.status_queue.put_nowait({
-          "type": "status",
-          "data": {"status": status},
-          "timestamp": time.time()
-      })
+conversation_manager = ConversationManager()
 
-  def on_thread_run(self, run: ThreadRun) -> None:
-      if not self.run_id:
-          self.run_id = run.id
+# OpenAI-format function tool definition passed inline to responses.create()
+PRODUCT_CATALOGUE_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "get_product_catalogue",
+        "description": "Fetch available insurance products filtered by risk level.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "risk": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high"],
+                    "description": "Risk level to filter products by",
+                }
+            },
+            "required": [],
+        },
+    },
+}
 
-      if run.status == "in_progress":
-          self._put_status("Thinking...")
-      elif run.status == "requires_action":
-          self._put_status("Looking up insurance products...")
-      elif run.status == "failed":
-          self._put_status(f"Request failed: {run.last_error}")
+AGENT_AVAILABLE = True
 
-      if run.status == "requires_action" and isinstance(run.required_action, SubmitToolOutputsAction):
-          tool_calls = run.required_action.submit_tool_outputs.tool_calls
-          tool_outputs = []
-
-          for tool_call in tool_calls:
-              if tool_call.function.name == "get_product_catalogue":
-                  self._put_status("Looking up insurance products...")
-                  args = json.loads(tool_call.function.arguments) if tool_call.function.arguments else {}
-                  risk = args.get("risk", "medium")
-                  result = get_product_catalogue(risk)
-
-                  tool_outputs.append(ToolOutput(
-                      tool_call_id=tool_call.id,
-                      output=result
-                  ))
-
-          if tool_outputs:
-              agents_client.runs.submit_tool_outputs_stream(
-                  thread_id=run.thread_id,
-                  run_id=run.id,
-                  tool_outputs=tool_outputs,
-                  event_handler=self
-              )
-
-  def on_run_step(self, step: RunStep) -> None:
-      if step.type == "tool_calls" and step.status == "in_progress":
-          self._put_status("Retrieving data...")
-
-  def on_done(self) -> None:
-      self.is_complete = True
-
-# Initialize components
-user_functions = {get_product_catalogue}
-thread_manager = ThreadManager(agents_client)
-
-# Agent setup
-def setup_agent():
-  """Initialize or find the insurance underwriting agent"""
-  try:
-      functions = FunctionTool(user_functions)
-      base_tools = list(functions.definitions)
-
-      try:
-          code_interpreter = CodeInterpreterTool()
-          base_tools.extend(code_interpreter.definitions)
-      except Exception as e:
-          print(f"CodeInterpreter not available: {e}")
-
-      # Build Work IQ MCP tools for M365 calendar and mail context
-      mcp_tools = []
-      mcp_resources = []
-      try:
-          workiq_tenant_id = os.environ.get("AZURE_TENANT_ID", "")
-          copilot = McpTool(
-              server_label="work_iq_copilot",
-              server_url=f"https://agent365.svc.cloud.microsoft/agents/tenants/{workiq_tenant_id}/servers/mcp_M365Copilot",
-          )
-          copilot.set_approval_mode("never")
-          calendar = McpTool(
-              server_label="work_iq_calendar",
-              server_url=f"https://agent365.svc.cloud.microsoft/agents/tenants/{workiq_tenant_id}/servers/mcp_M365Calendar",
-          )
-          calendar.set_approval_mode("never")
-          mcp_tools = list(copilot.definitions) + list(calendar.definitions)
-          mcp_resources = list(copilot.resources.mcp or []) + list(calendar.resources.mcp or [])
-          print("Work IQ MCP tools ready: Work IQ Copilot, Work IQ Calendar")
-      except Exception as e:
-          print(f"Work IQ MCP tools not available: {e}")
-
-      # Try to find existing agent
-      try:
-          agents = agents_client.list_agents()
-          for existing in agents:
-              if existing.name == agent_name:
-                  existing_tools = list(existing.tools or [])
-
-                  # Preserve portal-configured tools (e.g. MCP with connection auth);
-                  # replace only function/code_interpreter definitions with current code.
-                  preserved = [t for t in existing_tools if t.type not in ("function", "code_interpreter")]
-                  for t in preserved:
-                      print(f"Preserved tool: type={t.type} label={getattr(t, 'server_label', 'N/A')}")
-                  merged_tools = base_tools + preserved
-
-                  # If the existing agent already has MCP resources, keep them intact
-                  # (they carry the Foundry connection reference set via the portal).
-                  # Only inject our mcp_resources when creating a fresh agent.
-                  has_existing_mcp = any(t.type == "mcp" for t in existing_tools)
-                  if has_existing_mcp and existing.tool_resources:
-                      tr = existing.tool_resources
-                  elif mcp_resources:
-                      tr = ToolResources(mcp=mcp_resources)
-                      merged_tools = merged_tools + mcp_tools
-                  else:
-                      tr = None
-
-                  print(f"Updating existing agent {existing.id} — {len(merged_tools)} tools ({len(preserved)} preserved from portal, {len(mcp_tools)} MCP)")
-                  return agents_client.update_agent(
-                      agent_id=existing.id,
-                      model=model_deployment_name,
-                      instructions=SYSTEM_INSTRUCTIONS,
-                      tools=merged_tools,
-                      tool_resources=tr,
-                  ), functions
-      except Exception as e:
-          print(f"Could not list agents: {e}")
-
-      # Create new agent with all tools including Work IQ MCP
-      all_tools = base_tools + mcp_tools
-      tr = ToolResources(mcp=mcp_resources) if mcp_resources else None
-      print(f"Creating new agent '{agent_name}' with {len(all_tools)} tools")
-      new_agent = agents_client.create_agent(
-          model=model_deployment_name,
-          name=agent_name,
-          instructions=SYSTEM_INSTRUCTIONS,
-          tools=all_tools,
-          tool_resources=tr,
-      )
-      return new_agent, functions
-  except Exception as e:
-      print(f"Could not initialize Azure AI Agent (tenant mismatch or service unavailable): {e}")
-      print("Agent-based chat features will be disabled. Other features will work normally.")
-      return None, None
-
-# Initialize agent
-_agent_result = setup_agent()
-agent = _agent_result[0] if _agent_result else None
-functions = _agent_result[1] if _agent_result else None
-AGENT_AVAILABLE = agent is not None
-
-# Evaluation Configuration
-def setup_evaluators():
-    """Setup AI evaluators for agent performance"""
-    try:
-        if not EVALUATIONS_AVAILABLE:
-            print("Azure AI Evaluation not available - using mock evaluators")
-            return None, None, None
-        
-        # Model configuration for evaluators - requires environment variables
-        azure_openai_key = os.environ.get("AZURE_OPENAI_KEY")
-        if not azure_openai_key:
-            print("AZURE_OPENAI_KEY not set - using mock evaluators")
-            return None, None, None
-        
-        model_config = AzureOpenAIModelConfiguration(
-            azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT", ""),
-            api_key=azure_openai_key,
-            azure_deployment=os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4o"),
-            api_version=os.environ.get("AZURE_API_VERSION", "2024-02-01"),
-        )
-        
-        # Initialize evaluators
-        intent_resolution = IntentResolutionEvaluator(model_config=model_config, threshold=3)
-        tool_call_accuracy = ToolCallAccuracyEvaluator(model_config=model_config, threshold=3)
-        task_adherence = TaskAdherenceEvaluator(model_config=model_config, threshold=3)
-        
-        # Initialize converter for Azure AI agent messages
-        converter = AIAgentConverter(agents_client)
-        
-        return {
-            "intent_resolution": intent_resolution,
-            "tool_call_accuracy": tool_call_accuracy, 
-            "task_adherence": task_adherence
-        }, converter, model_config
-    except Exception as e:
-        print(f"Failed to setup evaluators: {e}")
-        return None, None, None
-
-# Initialize evaluators only if evaluations are enabled
-if ENABLE_EVALUATIONS:
-    evaluators, converter, model_config = setup_evaluators()
-else:
-    evaluators, converter, model_config = None, None, None
-
-# In-memory storage for evaluation results
+# In-memory storage for evaluation results (stub — evaluations not available post-migration)
 evaluation_cache = {}
 
 async def evaluate_agent_run(thread_id: str, run_id: str) -> Optional[Dict[str, Any]]:
-    """Evaluate an agent run and publish results to Azure AI Foundry"""
-    if not ENABLE_EVALUATIONS or not evaluators or not converter:
-        return {"error": "Evaluations not configured"}
-    
-    try:
-        # Check cache first
-        cache_key = f"{thread_id}:{run_id}"
-        if cache_key in evaluation_cache:
-            return evaluation_cache[cache_key]
-        
-        # Convert to evaluation format using AIAgentConverter
-        evaluation_data = converter.convert(thread_id=thread_id, run_id=run_id)
-        
-        # Run individual evaluators for frontend response (keep existing behavior)
-        results = {}
-        
-        # Run Intent Resolution evaluation
-        try:
-            intent_result = evaluators["intent_resolution"](
-                query=evaluation_data.get("query", ""),
-                response=evaluation_data.get("response", "")
-            )
-            results["intent_resolution"] = intent_result
-        except Exception as e:
-            results["intent_resolution"] = {"error": str(e)}
-        
-        # Run Tool Call Accuracy evaluation
-        try:
-            if evaluation_data.get("tool_calls") and evaluation_data.get("tool_definitions"):
-                tool_result = evaluators["tool_call_accuracy"](
-                    query=evaluation_data.get("query", ""),
-                    tool_calls=evaluation_data.get("tool_calls", []),
-                    tool_definitions=evaluation_data.get("tool_definitions", [])
-                )
-                results["tool_call_accuracy"] = tool_result
-            else:
-                results["tool_call_accuracy"] = {"info": "No tool calls to evaluate"}
-        except Exception as e:
-            results["tool_call_accuracy"] = {"error": str(e)}
-        
-        # Run Task Adherence evaluation
-        try:
-            task_result = evaluators["task_adherence"](
-                query=evaluation_data.get("query", ""),
-                response=evaluation_data.get("response", "")
-            )
-            results["task_adherence"] = task_result
-        except Exception as e:
-            results["task_adherence"] = {"error": str(e)}
-        
-        # Also publish to Azure AI Foundry in background (for dev investigation)
-        try:
-            import tempfile
-            
-            # Create temporary JSONL file as required by evaluate() function
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.jsonl', delete=False) as f:
-                json.dump(evaluation_data, f)
-                f.write('\n')
-                temp_file = f.name
-            
-            foundry_response = evaluate(
-                data=temp_file,  # Pass file path as required
-                evaluators={
-                    "intent_resolution": evaluators["intent_resolution"],
-                    "tool_call_accuracy": evaluators["tool_call_accuracy"],
-                    "task_adherence": evaluators["task_adherence"],
-                },
-                azure_ai_project=os.environ.get("PROJECT_ENDPOINT"),
-            )
-            studio_url = foundry_response.get("studio_url")
-            if studio_url:
-                print(f"Evaluation results available in Azure AI Foundry: {studio_url}")
-            
-            # Clean up temporary file
-            os.unlink(temp_file)
-            
-        except Exception as e:
-            print(f"Azure AI Foundry evaluation failed (non-critical): {e}")
-        
-        # Cache the results
-        evaluation_cache[cache_key] = results
-        
-        return results
-        
-    except Exception as e:
-        print(f"Evaluation failed for run {run_id}: {e}")
-        return {"error": f"Evaluation failed: {str(e)}"}
+    return {"error": "Evaluations not available"}
+
+
+def _run_agent_stream(input_messages: list, previous_response_id: str | None) -> tuple[list, str | None]:
+    """
+    Run one turn of the agent stream synchronously.
+    Returns (list of SSE event dicts, response_id).
+    Tool call events are included so the caller can execute them and loop.
+    """
+    create_kwargs = dict(
+        input=input_messages,
+        stream=True,
+        tools=[PRODUCT_CATALOGUE_TOOL],
+        extra_body={"agent_reference": {"name": agent_name, "type": "agent_reference"}},
+    )
+    if previous_response_id:
+        create_kwargs["previous_response_id"] = previous_response_id
+
+    events = []
+    response_id = None
+    with openai_client.responses.create(**create_kwargs) as stream:
+        for event in stream:
+            event_type = getattr(event, "type", "")
+            if event_type == "response.output_text.delta":
+                delta = getattr(event, "delta", "")
+                events.append({"type": "content", "data": {"content": delta}})
+            elif event_type == "response.output_item.done":
+                item = getattr(event, "item", None)
+                if item and getattr(item, "type", "") == "function_call":
+                    events.append({"type": "_tool_call", "item": item})
+            elif "oauth_consent" in event_type or "consent_request" in event_type:
+                url = getattr(event, "url", None) or getattr(getattr(event, "item", None), "url", None)
+                if url:
+                    events.append({"type": "consent_required", "data": {"url": url}})
+            elif event_type == "response.completed":
+                resp = getattr(event, "response", None)
+                if resp:
+                    response_id = getattr(resp, "id", None)
+    return events, response_id
+
+
+def stream_agent_response(session_id: str, user_message: str):
+    """
+    Synchronous generator that streams SSE event dicts for a user message.
+    Handles function tool calls in a loop until the agent is done.
+    """
+    previous_response_id = conversation_manager.get_previous_response_id(session_id)
+    current_input = [{"role": "user", "content": user_message}]
+
+    yield {"type": "status", "data": {"status": "Thinking..."}}
+
+    while True:
+        events, response_id = _run_agent_stream(current_input, previous_response_id)
+
+        if response_id:
+            conversation_manager.set_last_response_id(session_id, response_id)
+            previous_response_id = response_id
+
+        tool_calls = [e for e in events if e["type"] == "_tool_call"]
+        for e in events:
+            if e["type"] != "_tool_call":
+                yield e
+
+        if not tool_calls:
+            break
+
+        # Execute function tool calls and loop back with outputs
+        tool_outputs = []
+        for tc_event in tool_calls:
+            tc = tc_event["item"]
+            name = getattr(tc, "name", "")
+            call_id = getattr(tc, "call_id", getattr(tc, "id", ""))
+            arguments = getattr(tc, "arguments", "{}")
+            if name == "get_product_catalogue":
+                yield {"type": "status", "data": {"status": "Looking up insurance products..."}}
+                args = json.loads(arguments) if arguments else {}
+                result = get_product_catalogue(args.get("risk", "medium"))
+                tool_outputs.append({
+                    "type": "function_call_output",
+                    "call_id": call_id,
+                    "output": result,
+                })
+
+        if not tool_outputs:
+            break
+        current_input = tool_outputs
 
 # FastAPI app
 app = FastAPI(title="Insurance Underwriting API", version="1.0.0")
@@ -745,7 +510,7 @@ async def root():
 async def health():
   return {
       "status": "healthy",
-      "agent_id": agent.id if agent else None,
+      "agent_name": agent_name,
       "agent_available": AGENT_AVAILABLE
   }
 
@@ -1081,47 +846,12 @@ async def generate_pre_meeting_brief_endpoint(request: PreMeetingBriefRequest):
             appointment_id=request.appointment_id,
         )
 
-        thread = agents_client.threads.create()
-        agents_client.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=f"SYSTEM CONTEXT:\n{system_prompt}\n\n---\n\n{user_message}",
+        full_message = f"SYSTEM CONTEXT:\n{system_prompt}\n\n---\n\n{user_message}"
+        loop = asyncio.get_event_loop()
+        events = await loop.run_in_executor(
+            None, lambda: list(stream_agent_response("brief_session", full_message))
         )
-
-        class TextHandler(AgentEventHandler):
-            def __init__(self):
-                super().__init__()
-                self.text = ""
-
-            def on_message_delta(self, delta: MessageDeltaChunk):
-                if delta.delta.content:
-                    for chunk in delta.delta.content:
-                        self.text += chunk.text.get("value", "")
-
-            def on_thread_run(self, run: ThreadRun):
-                if run.status == "requires_action" and isinstance(run.required_action, SubmitToolOutputsAction):
-                    tool_calls = run.required_action.submit_tool_outputs.tool_calls
-                    tool_outputs = []
-                    for tc in tool_calls:
-                        if tc.function.name == "get_product_catalogue":
-                            args = json.loads(tc.function.arguments) if tc.function.arguments else {}
-                            result = get_product_catalogue(args.get("risk", "medium"))
-                            tool_outputs.append(ToolOutput(tool_call_id=tc.id, output=result))
-                    if tool_outputs:
-                        agents_client.runs.submit_tool_outputs_stream(
-                            thread_id=run.thread_id, run_id=run.id,
-                            tool_outputs=tool_outputs, event_handler=self,
-                        )
-
-        handler = TextHandler()
-        with agents_client.runs.stream(
-            thread_id=thread.id, agent_id=agent.id, event_handler=handler,
-        ) as stream:
-            for _ in stream:
-                pass
-
-        # Parse the JSON response from the LLM
-        raw = handler.text.strip()
+        raw = "".join(e["data"].get("content", "") for e in events if e["type"] == "content").strip()
         # Strip markdown code fences if the LLM added them despite instructions
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
@@ -1234,46 +964,12 @@ async def generate_scenario_analysis_endpoint(request: ScenarioAnalysisRequest):
             client_summaries=client_summaries,
         )
 
-        thread = agents_client.threads.create()
-        agents_client.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=f"SYSTEM CONTEXT:\n{system_prompt}\n\n---\n\n{user_message}",
+        full_message = f"SYSTEM CONTEXT:\n{system_prompt}\n\n---\n\n{user_message}"
+        loop = asyncio.get_event_loop()
+        events = await loop.run_in_executor(
+            None, lambda: list(stream_agent_response("scenario_session", full_message))
         )
-
-        class TextHandler(AgentEventHandler):
-            def __init__(self):
-                super().__init__()
-                self.text = ""
-
-            def on_message_delta(self, delta: MessageDeltaChunk):
-                if delta.delta.content:
-                    for chunk in delta.delta.content:
-                        self.text += chunk.text.get("value", "")
-
-            def on_thread_run(self, run: ThreadRun):
-                if run.status == "requires_action" and isinstance(run.required_action, SubmitToolOutputsAction):
-                    tool_calls = run.required_action.submit_tool_outputs.tool_calls
-                    tool_outputs = []
-                    for tc in tool_calls:
-                        if tc.function.name == "get_product_catalogue":
-                            args = json.loads(tc.function.arguments) if tc.function.arguments else {}
-                            result = get_product_catalogue(args.get("risk", "medium"))
-                            tool_outputs.append(ToolOutput(tool_call_id=tc.id, output=result))
-                    if tool_outputs:
-                        agents_client.runs.submit_tool_outputs_stream(
-                            thread_id=run.thread_id, run_id=run.id,
-                            tool_outputs=tool_outputs, event_handler=self,
-                        )
-
-        handler = TextHandler()
-        with agents_client.runs.stream(
-            thread_id=thread.id, agent_id=agent.id, event_handler=handler,
-        ) as stream:
-            for _ in stream:
-                pass
-
-        raw = handler.text.strip()
+        raw = "".join(e["data"].get("content", "") for e in events if e["type"] == "content").strip()
         if raw.startswith("```"):
             raw = raw.split("\n", 1)[1] if "\n" in raw else raw[3:]
             if raw.endswith("```"):
@@ -1284,7 +980,7 @@ async def generate_scenario_analysis_endpoint(request: ScenarioAnalysisRequest):
         return analysis_data
 
     except json.JSONDecodeError as e:
-        print(f"Scenario analysis JSON parse error: {e}\nRaw response: {handler.text[:500]}")
+        print(f"Scenario analysis JSON parse error: {e}\nRaw response: {raw[:500] if 'raw' in dir() else 'N/A'}")
         raise HTTPException(status_code=502, detail="LLM returned invalid JSON for scenario analysis")
     except Exception as e:
         print(f"Scenario analysis error: {e}")
@@ -1709,51 +1405,13 @@ async def advisor_chat(request: AdvisorChatRequest):
             )
 
         system_prompt = await _build_advisor_context(request.advisor_id)
-
-        # Create a dedicated thread for this advisor conversation
-        thread = agents_client.threads.create()
-
-        # Send system context + user message
-        agents_client.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=f"SYSTEM CONTEXT:\n{system_prompt}\n\n---\n\nADVISOR QUESTION:\n{request.message}",
+        full_message = f"SYSTEM CONTEXT:\n{system_prompt}\n\n---\n\nADVISOR QUESTION:\n{request.message}"
+        loop = asyncio.get_event_loop()
+        events = await loop.run_in_executor(
+            None, lambda: list(stream_agent_response(f"advisor_{request.advisor_id}", full_message))
         )
-
-        # Run the agent and collect response
-        class TextHandler(AgentEventHandler):
-            def __init__(self):
-                super().__init__()
-                self.text = ""
-
-            def on_message_delta(self, delta: MessageDeltaChunk):
-                if delta.delta.content:
-                    for chunk in delta.delta.content:
-                        self.text += chunk.text.get("value", "")
-
-            def on_thread_run(self, run: ThreadRun):
-                if run.status == "requires_action" and isinstance(run.required_action, SubmitToolOutputsAction):
-                    tool_calls = run.required_action.submit_tool_outputs.tool_calls
-                    tool_outputs = []
-                    for tc in tool_calls:
-                        if tc.function.name == "get_product_catalogue":
-                            args = json.loads(tc.function.arguments) if tc.function.arguments else {}
-                            result = get_product_catalogue(args.get("risk", "medium"))
-                            tool_outputs.append(ToolOutput(tool_call_id=tc.id, output=result))
-                    if tool_outputs:
-                        agents_client.runs.submit_tool_outputs_stream(
-                            thread_id=run.thread_id, run_id=run.id,
-                            tool_outputs=tool_outputs, event_handler=self,
-                        )
-
-        handler = TextHandler()
-        with agents_client.runs.stream(
-            thread_id=thread.id, agent_id=agent.id, event_handler=handler,
-        ) as stream:
-            for _ in stream:
-                pass
-
-        clean_text, citations = _extract_citations(handler.text)
+        raw = "".join(e["data"].get("content", "") for e in events if e["type"] == "content")
+        clean_text, citations = _extract_citations(raw)
         return {"response": clean_text, "citations": citations}
 
     except Exception as e:
@@ -1804,14 +1462,9 @@ async def advisor_chat_stream(request: AdvisorChatRequest):
             )
 
         system_prompt = await _build_advisor_context(request.advisor_id)
-
-        # Create a dedicated thread for this advisor conversation
-        thread = agents_client.threads.create()
-
-        # Build full message with history context
         history_text = ""
         if request.history:
-            for msg in request.history[-10:]:  # Last 10 messages for context
+            for msg in request.history[-10:]:
                 role_label = "Underwriter" if msg.role == "user" else "Woodgrove AI"
                 history_text += f"{role_label}: {msg.content}\n\n"
 
@@ -1820,74 +1473,12 @@ async def advisor_chat_stream(request: AdvisorChatRequest):
             full_message += f"CONVERSATION HISTORY:\n{history_text}\n---\n\n"
         full_message += f"ADVISOR QUESTION:\n{request.message}"
 
-        agents_client.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=full_message,
-        )
-
-        async def generate():
+        def generate():
             accumulated = ""
-
-            class StreamHandler(AgentEventHandler):
-                def __init__(self):
-                    super().__init__()
-                    self.chunks = asyncio.Queue()
-                    self.done = False
-
-                def on_message_delta(self, delta: MessageDeltaChunk):
-                    if delta.delta.content:
-                        for chunk in delta.delta.content:
-                            text = chunk.text.get("value", "")
-                            if text:
-                                self.chunks.put_nowait(text)
-
-                def on_done(self):
-                    self.done = True
-
-                def on_thread_run(self, run: ThreadRun):
-                    if run.status == "requires_action" and isinstance(run.required_action, SubmitToolOutputsAction):
-                        tool_calls = run.required_action.submit_tool_outputs.tool_calls
-                        tool_outputs = []
-                        for tc in tool_calls:
-                            if tc.function.name == "get_product_catalogue":
-                                args = json.loads(tc.function.arguments) if tc.function.arguments else {}
-                                result = get_product_catalogue(args.get("risk", "medium"))
-                                tool_outputs.append(ToolOutput(tool_call_id=tc.id, output=result))
-                        if tool_outputs:
-                            agents_client.runs.submit_tool_outputs_stream(
-                                thread_id=run.thread_id, run_id=run.id,
-                                tool_outputs=tool_outputs, event_handler=self,
-                            )
-
-            handler = StreamHandler()
-
-            async def run_agent():
-                with agents_client.runs.stream(
-                    thread_id=thread.id, agent_id=agent.id, event_handler=handler,
-                ) as stream:
-                    for _ in stream:
-                        await asyncio.sleep(0.01)
-                handler.done = True
-
-            task = asyncio.create_task(run_agent())
-
-            while not handler.done or not handler.chunks.empty():
-                try:
-                    chunk = await asyncio.wait_for(handler.chunks.get(), timeout=0.1)
-                    accumulated += chunk
-                    yield f"data: {json.dumps({'type': 'content', 'data': chunk})}\n\n"
-                except asyncio.TimeoutError:
-                    if task.done():
-                        # Drain remaining chunks
-                        while not handler.chunks.empty():
-                            chunk = handler.chunks.get_nowait()
-                            accumulated += chunk
-                            yield f"data: {json.dumps({'type': 'content', 'data': chunk})}\n\n"
-                        break
-
-            await task
-
+            for ev in stream_agent_response(f"advisor_{request.advisor_id}", full_message):
+                if ev["type"] == "content":
+                    accumulated += ev["data"].get("content", "")
+                    yield f"data: {json.dumps({'type': 'content', 'data': ev['data'].get('content', '')})}\n\n"
             clean_text, citations = _extract_citations(accumulated)
             yield f"data: {json.dumps({'type': 'complete', 'data': {'response': clean_text, 'citations': citations}})}\n\n"
 
@@ -1924,303 +1515,75 @@ async def evaluate_run(thread_id: str, run_id: str):
 
 @app.post("/chat/stream")
 async def chat_stream(request: ChatRequest, http_request: FastAPIRequest):
-  """Streaming chat endpoint with real-time status updates"""
-  use_fabric = (request.data_source == "fabric")
+    """Streaming chat endpoint using Azure AI Projects Responses API."""
+    use_fabric = (request.data_source == "fabric")
 
-  # ── Fabric-only streaming path ─────────────────────────────────────────
-  if use_fabric:
-      if not FABRIC_AVAILABLE:
-          raise HTTPException(
-              status_code=503,
-              detail="Fabric Data Agent is not configured. Set FABRIC_TENANT_ID, "
-                     "FABRIC_CLIENT_ID, FABRIC_CLIENT_SECRET, FABRIC_DATA_AGENT_URL, "
-                     "FABRIC_DATA_AGENT_ID in your .env file.",
-          )
+    # ── Fabric path — query Fabric first, then pass enriched prompt to agent ─
+    if use_fabric:
+        if not FABRIC_AVAILABLE:
+            raise HTTPException(status_code=503, detail="Fabric Data Agent is not configured.")
 
-      async def fabric_generate_stream():
-          import time as _t
-          # 1. Query Fabric Data Agent for client/portfolio data
-          yield f"data: {json.dumps({'type': 'status', 'data': {'status': 'Querying Fabric Data Agent for client data...'}, 'timestamp': _t.time()})}\n\n"
+        async def fabric_stream():
+            yield f"data: {json.dumps({'type': 'status', 'data': {'status': 'Querying Fabric Data Agent...'}, 'timestamp': time.time()})}\n\n"
+            try:
+                fabric_result = await fabric_client.query(request.message, timeout=60)
+            except Exception as e:
+                yield f"data: {json.dumps({'type': 'error', 'data': {'error': f'Fabric query failed: {e}'}, 'timestamp': time.time()})}\n\n"
+                return
 
-          try:
-              fabric_result = await fabric_client.query(request.message, timeout=60)
-          except Exception as e:
-              yield f"data: {json.dumps({'type': 'error', 'data': {'error': f'Fabric query failed: {e}'}, 'timestamp': _t.time()})}\n\n"
-              return
+            profile = request.profile or SAMPLE_PROFILES[0]
+            enriched = build_fabric_enriched_prompt(request.message, fabric_result, original_profile=profile.dict() if profile else None)
 
-          # 2. If we have an Azure AI Agent, enrich with Fabric data and run analysis
-          if AGENT_AVAILABLE:
-              yield f"data: {json.dumps({'type': 'status', 'data': {'status': 'Analyzing with AI Agent (Fabric data)...'}, 'timestamp': _t.time()})}\n\n"
+            loop = asyncio.get_event_loop()
+            events = await loop.run_in_executor(None, lambda: list(stream_agent_response("fabric_session", enriched)))
+            accumulated = ""
+            for ev in events:
+                if ev["type"] == "content":
+                    accumulated += ev["data"].get("content", "")
+                yield f"data: {json.dumps({**ev, 'timestamp': time.time()})}\n\n"
 
-              profile = request.profile or SAMPLE_PROFILES[0]
-              enriched_prompt = build_fabric_enriched_prompt(
-                  request.message,
-                  fabric_result,
-                  original_profile=profile.dict() if profile else None,
-              )
+            yield f"data: {json.dumps({'type': 'complete', 'data': {'response': accumulated, 'source': 'fabric', 'fabric_data': fabric_result.get('data')}, 'timestamp': time.time()})}\n\n"
 
-              # Use the same Azure AI Agent but with Fabric-enriched prompt
-              thread_id = thread_manager.get_or_create_thread("fabric_session")
-              payload = {
-                  "profile": profile.dict() if profile else {},
-                  "question": enriched_prompt,
-                  "source": "fabric",
-              }
-              agents_client.messages.create(
-                  thread_id=thread_id, role="user", content=json.dumps(payload)
-              )
+        return StreamingResponse(fabric_stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "Connection": "keep-alive"})
 
-              event_handler = StreamingRetirementEventHandler(functions)
-              with agents_client.runs.stream(
-                  thread_id=thread_id, agent_id=agent.id, event_handler=event_handler
-              ) as stream:
-                  async def _process():
-                      for _ in stream:
-                          await asyncio.sleep(0.01)
-                  task = asyncio.create_task(_process())
-                  while not event_handler.is_complete:
-                      try:
-                          update = await asyncio.wait_for(event_handler.status_queue.get(), timeout=0.1)
-                          yield f"data: {json.dumps(update)}\n\n"
-                      except asyncio.TimeoutError:
-                          pass
-                      if task.done():
-                          break
-                  await task
+    # ── Default path ─────────────────────────────────────────────────────────
+    profile = request.profile or SAMPLE_PROFILES[0]
+    profile_context = (
+        f"Applicant profile: {profile.name}, age {profile.age}, "
+        f"risk appetite: {profile.risk_appetite}, salary: ${profile.salary:,}."
+    )
+    full_message = f"{profile_context}\n\n{request.message}"
 
-              response_text = event_handler._accumulated_text
-              # Parse analysis JSON from response (same logic as local path)
-              try:
-                  json_start = response_text.find('{')
-                  json_end = response_text.rfind('}') + 1
-                  if json_start != -1 and json_end > json_start:
-                      json_str = response_text[json_start:json_end]
-                      json_str = json_str.replace(',\n}', '\n}').replace(',\n]', '\n]')
-                      analysis_dict = json.loads(json_str)
-                      analysis_data = AnalysisOutput(**analysis_dict)
-                      yield f"data: {json.dumps({'type': 'analysis', 'data': {'analysis': analysis_data.model_dump()}, 'timestamp': _t.time()})}\n\n"
-                  else:
-                      yield f"data: {json.dumps({'type': 'content', 'data': {'text': response_text}, 'timestamp': _t.time()})}\n\n"
-              except Exception:
-                  yield f"data: {json.dumps({'type': 'content', 'data': {'text': response_text}, 'timestamp': _t.time()})}\n\n"
+    def generate():
+        accumulated = ""
+        for ev in stream_agent_response("default_session", full_message):
+            accumulated += ev["data"].get("content", "") if ev["type"] == "content" else ""
+            yield f"data: {json.dumps({**ev, 'timestamp': time.time()})}\n\n"
+        yield f"data: {json.dumps({'type': 'complete', 'data': {'response': accumulated, 'analysis': None, 'status': 'completed'}, 'timestamp': time.time()})}\n\n"
 
-          else:
-              # No AI Agent — return raw Fabric result
-              yield f"data: {json.dumps({'type': 'content', 'data': {'text': fabric_result.get('answer', '')}, 'timestamp': _t.time()})}\n\n"
-
-          yield f"data: {json.dumps({'type': 'complete', 'data': {'source': 'fabric', 'fabric_data': fabric_result.get('data')}, 'timestamp': _t.time()})}\n\n"
-
-      return StreamingResponse(
-          fabric_generate_stream(),
-          media_type="text/event-stream",
-          headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
-      )
-
-  # ── Default local path (unchanged) ─────────────────────────────────────
-  if not AGENT_AVAILABLE:
-      raise HTTPException(
-          status_code=503,
-          detail="AI agent service is temporarily unavailable (tenant configuration issue). Please try again later."
-      )
-  try:
-      profile = request.profile or SAMPLE_PROFILES[0]
-      thread_id = thread_manager.get_or_create_thread("default_session")
-      
-      # Create message payload
-      payload = {
-          "profile": profile.dict(),
-          "question": request.message
-      }
-      
-      # Send message to thread
-      agents_client.messages.create(
-          thread_id=thread_id,
-          role="user",
-          content=json.dumps(payload)
-      )
-      
-      # Build per-run MCP resources with the signed-in user's token so Work IQ
-      # can access their M365 calendar and email data.
-      user_token = http_request.headers.get("x-ms-token-aad-access-token")
-      if user_token:
-          run_tool_resources = ToolResources(mcp=[
-              MCPToolResource(server_label="work_iq_copilot", headers={"Authorization": f"Bearer {user_token}"}, require_approval="never"),
-              MCPToolResource(server_label="work_iq_calendar", headers={"Authorization": f"Bearer {user_token}"}, require_approval="never"),
-          ])
-          print("Work IQ: using user identity token for this run")
-      else:
-          run_tool_resources = None
-          print("Work IQ: no user token available (SWA Linked Backend not connected?)")
-
-      async def generate_stream():
-          event_handler = StreamingRetirementEventHandler(functions)
-          response_text = ""
-          analysis_data = None
-
-          # Start the streaming run.
-          # When no user token is available, override tools to exclude Work IQ
-          # MCP servers — without a Bearer token they return 424 at init and
-          # fail the entire run before the agent can generate any response.
-          stream_kwargs = dict(
-              thread_id=thread_id,
-              agent_id=agent.id,
-              event_handler=event_handler,
-              tool_resources=run_tool_resources,
-          )
-          if run_tool_resources is None:
-              stream_kwargs["tools"] = list(functions.definitions)
-
-          with agents_client.runs.stream(**stream_kwargs) as stream:
-              
-              # Process events in a separate task
-              async def process_events():
-                  for event in stream:
-                      await asyncio.sleep(0.01)  # Small delay to allow queue processing
-              
-              # Start processing events
-              event_task = asyncio.create_task(process_events())
-              
-              # Stream status updates only (no content streaming)
-              while not event_handler.is_complete:
-                  try:
-                      # Check for status updates
-                      status_update = await asyncio.wait_for(
-                          event_handler.status_queue.get(), timeout=0.1
-                      )
-                      yield f"data: {json.dumps(status_update)}\n\n"
-                  except asyncio.TimeoutError:
-                      pass
-                  
-                  if event_task.done():
-                      break
-              
-              # Wait for event processing to complete
-              await event_task
-
-              # Drain any remaining content/status events before sending complete
-              while not event_handler.status_queue.empty():
-                  try:
-                      remaining = event_handler.status_queue.get_nowait()
-                      yield f"data: {json.dumps(remaining)}\n\n"
-                  except asyncio.QueueEmpty:
-                      break
-
-          # Send the conversational response directly
-          response_text = event_handler._accumulated_text.strip()
-          final_response = {
-              "type": "complete",
-              "data": {
-                  "response": response_text,
-                  "analysis": None,
-                  "status": "completed",
-                  "evaluation_context": {
-                      "thread_id": thread_id,
-                      "run_id": event_handler.run_id
-                  } if event_handler.run_id else None
-              },
-              "timestamp": time.time()
-          }
-          yield f"data: {json.dumps(final_response)}\n\n"
-      
-      return StreamingResponse(
-          generate_stream(),
-          media_type="text/plain",
-          headers={
-              "Cache-Control": "no-cache",
-              "Connection": "keep-alive",
-              "Content-Type": "text/event-stream",
-          }
-      )
-      
-  except Exception as e:
-      raise HTTPException(status_code=500, detail=str(e))
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "Content-Type": "text/event-stream"},
+    )
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
-  """Non-streaming chat endpoint for compatibility"""
-  if not AGENT_AVAILABLE:
-      raise HTTPException(
-          status_code=503,
-          detail="AI agent service is temporarily unavailable (tenant configuration issue). Please try again later."
-      )
-  try:
-      profile = request.profile or SAMPLE_PROFILES[0]
-      thread_id = thread_manager.get_or_create_thread("default_session")
-      
-      # Create message payload
-      payload = {
-          "profile": profile.dict(),
-          "question": request.message
-      }
-      
-      # Send message to thread
-      agents_client.messages.create(
-          thread_id=thread_id,
-          role="user",
-          content=json.dumps(payload)
-      )
-      
-      # Run the agent
-      response_text = ""
-      analysis_data = None
-      
-      class ResponseHandler(AgentEventHandler):
-          def __init__(self):
-              super().__init__()
-              self.response = ""
-          
-          def on_message_delta(self, delta: MessageDeltaChunk):
-              if delta.delta.content:
-                  for chunk in delta.delta.content:
-                      self.response += chunk.text.get("value", "")
-          
-          def on_thread_run(self, run: ThreadRun):
-              if run.status == "completed":
-                  pass  # Evaluation trigger removed for testing
-              
-              if run.status == "requires_action" and isinstance(run.required_action, SubmitToolOutputsAction):
-                  tool_calls = run.required_action.submit_tool_outputs.tool_calls
-                  tool_outputs = []
-                  
-                  for tool_call in tool_calls:
-                      if tool_call.function.name == "get_product_catalogue":
-                          args = json.loads(tool_call.function.arguments) if tool_call.function.arguments else {}
-                          risk = args.get("risk", "medium")
-                          result = get_product_catalogue(risk)
-                          
-                          tool_outputs.append(ToolOutput(
-                              tool_call_id=tool_call.id,
-                              output=result
-                          ))
-                  
-                  if tool_outputs:
-                      agents_client.runs.submit_tool_outputs_stream(
-                          thread_id=run.thread_id,
-                          run_id=run.id,
-                          tool_outputs=tool_outputs,
-                          event_handler=self
-                      )
-      
-      handler = ResponseHandler()
-      
-      with agents_client.runs.stream(
-          thread_id=thread_id,
-          agent_id=agent.id,
-          event_handler=handler
-      ) as stream:
-          for event in stream:
-              pass
-      
-      response_text = handler.response
-      
-      return ChatResponse(
-          response=response_text,
-          analysis=None,
-          status="completed"
-      )
-      
-  except Exception as e:
-      raise HTTPException(status_code=500, detail=str(e))
+    """Non-streaming chat endpoint for compatibility."""
+    try:
+        profile = request.profile or SAMPLE_PROFILES[0]
+        profile_context = (
+            f"Applicant profile: {profile.name}, age {profile.age}, "
+            f"risk appetite: {profile.risk_appetite}, salary: ${profile.salary:,}."
+        )
+        full_message = f"{profile_context}\n\n{request.message}"
+
+        loop = asyncio.get_event_loop()
+        events = await loop.run_in_executor(None, lambda: list(stream_agent_response("default_session", full_message)))
+        response_text = "".join(e["data"].get("content", "") for e in events if e["type"] == "content")
+        return ChatResponse(response=response_text, analysis=None, status="completed")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ─── Scenario Projection Endpoint ────────────────────────────────────────────
@@ -2465,40 +1828,11 @@ async def project_scenario(request: ScenarioProjectionRequest):
             holdings_summary=holdings_summary or "No holdings provided"
         )
         
-        # Create a thread and run the projection
-        thread = agents_client.threads.create()
-        
-        agents_client.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=formatted_prompt
+        loop = asyncio.get_event_loop()
+        events = await loop.run_in_executor(
+            None, lambda: list(stream_agent_response("projection_session", formatted_prompt))
         )
-        
-        # Run with streaming to capture response
-        class ProjectionHandler(AgentEventHandler):
-            def __init__(self):
-                super().__init__()
-                self.response = ""
-            
-            def on_message_delta(self, delta: MessageDeltaChunk):
-                if delta.delta.content:
-                    for chunk in delta.delta.content:
-                        self.response += chunk.text.get("value", "")
-            
-            def on_thread_run(self, run: ThreadRun):
-                pass  # No tool calls needed for projections
-        
-        handler = ProjectionHandler()
-        
-        with agents_client.runs.stream(
-            thread_id=thread.id,
-            agent_id=agent.id,
-            event_handler=handler
-        ) as stream:
-            for event in stream:
-                pass
-        
-        response_text = handler.response.strip()
+        response_text = "".join(e["data"].get("content", "") for e in events if e["type"] == "content").strip()
         
         # Parse JSON from response
         json_start = response_text.find('{')
