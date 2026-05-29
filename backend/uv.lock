@@ -202,20 +202,6 @@ wheels = [
 ]
 
 [[package]]
-name = "azure-ai-agents"
-version = "1.2.0b6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "azure-core" },
-    { name = "isodate" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/68/32/f4e534dc05dfb714705df56a190d690c5452cd4dd7e936612cb1adddc44f/azure_ai_agents-1.2.0b6.tar.gz", hash = "sha256:d3c10848c3b19dec98a292f8c10cee4ba4aac1050d4faabf9c2e2456b727f528", size = 396865, upload-time = "2025-10-24T18:04:47.877Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/96/d0/930c522f5fa9da163de057e57f8b44539424e13f46618c52624ebc712293/azure_ai_agents-1.2.0b6-py3-none-any.whl", hash = "sha256:ce23ad8fb9791118905be1ec8eae5c907cca2e536a455f1d3b830062c72cf2a7", size = 217950, upload-time = "2025-10-24T18:04:49.72Z" },
-]
-
-[[package]]
 name = "azure-ai-evaluation"
 version = "1.15.0"
 source = { registry = "https://pypi.org/simple" }
@@ -236,6 +222,23 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/21/ad/acb5093e50eeb59d8c633c1b8eeee36da24fcabd3dc4291d15c26e52fd9f/azure_ai_evaluation-1.15.0.tar.gz", hash = "sha256:87833f23df6d6f7a0444630d370217cfaa78d50fdb790e2a53450786d73da79c", size = 2214837, upload-time = "2026-02-06T16:57:49.539Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/64/3e/8a5c092aa8d062044a963259675c9fa1ebb89da37047ef3a4ecfb2860105/azure_ai_evaluation-1.15.0-py3-none-any.whl", hash = "sha256:75126de43bb895d12096c76154adff9a46a1faff5a0173a3b7993125b86ed664", size = 1154500, upload-time = "2026-02-06T16:57:51.279Z" },
+]
+
+[[package]]
+name = "azure-ai-projects"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "azure-core" },
+    { name = "azure-identity" },
+    { name = "azure-storage-blob" },
+    { name = "isodate" },
+    { name = "openai" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/72/76/3fdede8eddfe5927a571898a15f0288ba30fee78e5ba099f88df3ded70af/azure_ai_projects-2.1.0.tar.gz", hash = "sha256:f0749fa9a174255aa1a5550fb6078208521518472907a4c6dd552767d9b39caa", size = 543343, upload-time = "2026-04-20T17:06:48.751Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f7/f6/4984e7772a97c7a9e6505a3de8e55a5070fa2b02cd7e980da91e0d9b9b97/azure_ai_projects-2.1.0-py3-none-any.whl", hash = "sha256:6f259d8eb9167d2dfd372006d0221a8118faeaeb05829fa898b595bc6f19c699", size = 274309, upload-time = "2026-04-20T17:06:50.542Z" },
 ]
 
 [[package]]
@@ -2043,7 +2046,7 @@ name = "sage-retirement-backend"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "azure-ai-agents" },
+    { name = "azure-ai-projects" },
     { name = "azure-core" },
     { name = "azure-identity" },
     { name = "fastapi" },
@@ -2072,8 +2075,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "azure-ai-agents", specifier = ">=1.2.0b6" },
     { name = "azure-ai-evaluation", marker = "extra == 'eval'", specifier = ">=1.0.0" },
+    { name = "azure-ai-projects", specifier = ">=2.1.0" },
     { name = "azure-core", specifier = ">=1.29.5" },
     { name = "azure-identity", specifier = ">=1.15.0" },
     { name = "fastapi", specifier = ">=0.104.1" },
