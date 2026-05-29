@@ -371,20 +371,18 @@ conversation_manager = ConversationManager()
 # OpenAI-format function tool definition passed inline to responses.create()
 PRODUCT_CATALOGUE_TOOL = {
     "type": "function",
-    "function": {
-        "name": "get_product_catalogue",
-        "description": "Fetch available insurance products filtered by risk level.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "risk": {
-                    "type": "string",
-                    "enum": ["low", "medium", "high"],
-                    "description": "Risk level to filter products by",
-                }
-            },
-            "required": [],
+    "name": "get_product_catalogue",
+    "description": "Fetch available insurance products filtered by risk level.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "risk": {
+                "type": "string",
+                "enum": ["low", "medium", "high"],
+                "description": "Risk level to filter products by",
+            }
         },
+        "required": [],
     },
 }
 
