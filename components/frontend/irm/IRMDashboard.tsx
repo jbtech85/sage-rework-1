@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import type { IRMScene } from '@/lib/irmTypes'
 import { ACCOUNTS, MARKET_EVENT } from '@/lib/irmData'
 import {
@@ -123,6 +124,60 @@ const impactIcons = [TrendingUp, Activity, Layers, Droplets]
 const affectedAccounts = ACCOUNTS.filter((a) => a.impactSeverity !== 'minimal')
 const minimalAccounts = ACCOUNTS.filter((a) => a.impactSeverity === 'minimal')
 
+// Tier breakdown computed from data
+const tierStats = ([1, 2, 3] as const).map((tier) => {
+  const accounts = ACCOUNTS.filter((a) => a.tier === tier)
+  return {
+    tier,
+    count: accounts.length,
+    aum: Math.round(accounts.reduce((sum, a) => sum + a.aumBillions, 0) * 100) / 100,
+  }
+})
+const totalAUM = tierStats.reduce((sum, t) => sum + t.aum, 0)
+
+const tierColors: Record<number, { bar: string; label: string; badge: string }> = {
+  1: { bar: 'bg-amber-400',  label: 'text-amber-700',  badge: 'bg-amber-50 border-amber-200 text-amber-700' },
+  2: { bar: 'bg-indigo-500', label: 'text-indigo-700', badge: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
+  3: { bar: 'bg-gray-400',   label: 'text-gray-600',   badge: 'bg-gray-50 border-gray-200 text-gray-600' },
+}
+
+function TierKPIBar() {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">AUM by Tier</span>
+        <span className="text-sm font-semibold text-gray-900">${totalAUM.toFixed(2)}B total</span>
+      </div>
+
+      {/* Segmented bar */}
+      <div className="flex h-2 rounded-full overflow-hidden gap-0.5 mb-3">
+        {tierStats.map((t) => (
+          <div
+            key={t.tier}
+            className={`${tierColors[t.tier].bar} rounded-full transition-all`}
+            style={{ width: `${(t.aum / totalAUM) * 100}%` }}
+          />
+        ))}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4">
+        {tierStats.map((t) => (
+          <div key={t.tier} className="flex items-center gap-2 flex-1">
+            <span className={`border rounded-full px-2 py-0.5 text-xs font-medium ${tierColors[t.tier].badge}`}>
+              Tier {t.tier}
+            </span>
+            <div className="min-w-0">
+              <div className={`text-sm font-semibold ${tierColors[t.tier].label}`}>${t.aum.toFixed(2)}B</div>
+              <div className="text-xs text-gray-400">{t.count} account{t.count !== 1 ? 's' : ''}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function GreetingRow() {
   return (
     <div className="flex items-center justify-between mb-6">
@@ -184,33 +239,243 @@ function CollapsedAlertPill({
   )
 }
 
+// ── Morningstar placeholder charts ────────────────────────────────────────────
+
+function MorningstarBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5">
+      Morningstar
+    </span>
+  )
+}
+
+function RateCurveChart() {
+  return (
+    <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-700">Rate Curve Shift</span>
+        <MorningstarBadge />
+      </div>
+      <svg viewBox="0 0 260 110" className="w-full" style={{ height: 110 }}>
+        {/* Grid lines */}
+        {[20, 45, 70, 95].map(y => (
+          <line key={y} x1="30" y1={y} x2="255" y2={y} stroke="#f3f4f6" strokeWidth="1" />
+        ))}
+        {/* Yesterday curve — gray, mostly flat with gentle rise */}
+        <polyline
+          points="30,72 75,70 120,68 165,65 210,63 255,60"
+          fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinejoin="round"
+        />
+        {/* Today curve — blue, long end reprices up sharply */}
+        <polyline
+          points="30,74 75,71 120,69 165,62 210,45 255,28"
+          fill="none" stroke="#4f46e5" strokeWidth="2.5" strokeLinejoin="round"
+        />
+        {/* Shaded gap between curves on long end */}
+        <polygon
+          points="165,62 210,45 255,28 255,60 210,63 165,65"
+          fill="rgba(239,68,68,0.08)"
+        />
+        {/* X-axis labels */}
+        {['3M','1Y','5Y','10Y','30Y'].map((label, i) => (
+          <text key={label} x={30 + i * 55.75} y="107" fontSize="9" fill="#9ca3af" textAnchor="middle">{label}</text>
+        ))}
+        {/* Annotation */}
+        <text x="222" y="22" fontSize="9" fill="#dc2626" fontWeight="600">+18–22bps</text>
+      </svg>
+      {/* Legend */}
+      <div className="flex items-center gap-3 text-[10px] text-gray-500">
+        <span className="flex items-center gap-1"><span className="inline-block w-4 h-0.5 bg-gray-400" />Yesterday</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-4 h-0.5 bg-indigo-500" />Today</span>
+        <span className="flex items-center gap-1 text-red-500 ml-auto">Long-end repricing</span>
+      </div>
+    </div>
+  )
+}
+
+function SectorHeatmap() {
+  const sectors = ['Financials','Utilities','Industrials','Healthcare','Technology','Energy','Consumer']
+  const periods = ['1W','1M','3M','QTD']
+  // color intensity per cell [sector][period]: 0=green, 1=amber, 2=red
+  const heat = [
+    [1,2,2,2], // Financials
+    [1,1,2,2], // Utilities
+    [0,1,1,1], // Industrials
+    [0,0,0,0], // Healthcare
+    [0,0,0,0], // Technology
+    [0,1,1,1], // Energy
+    [0,0,0,1], // Consumer
+  ]
+  const cellColor = (v: number) =>
+    v === 2 ? 'bg-red-400' : v === 1 ? 'bg-amber-300' : 'bg-green-200'
+
+  return (
+    <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-700">IG Spread Heatmap</span>
+        <MorningstarBadge />
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[9px] border-separate border-spacing-0.5">
+          <thead>
+            <tr>
+              <td className="w-16" />
+              {periods.map(p => (
+                <td key={p} className="text-center text-gray-400 font-medium pb-1">{p}</td>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sectors.map((sector, si) => (
+              <tr key={sector}>
+                <td className="text-gray-500 pr-1 text-right leading-tight py-0.5">{sector}</td>
+                {heat[si].map((v, pi) => (
+                  <td key={pi} className="text-center py-0.5">
+                    <div className={`${cellColor(v)} rounded-sm mx-auto`} style={{ width: 20, height: 14 }} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex items-center gap-2 text-[9px] text-gray-400">
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-green-200" />Tight</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-amber-300" />Widening</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-red-400" />Significant</span>
+      </div>
+    </div>
+  )
+}
+
+function IGSpreadChart() {
+  const sectors = [
+    { name: 'Financials', bps: 18, color: '#ef4444' },
+    { name: 'Utilities',  bps: 12, color: '#f97316' },
+    { name: 'Energy',     bps: 9,  color: '#f59e0b' },
+    { name: 'Industrials',bps: 5,  color: '#fbbf24' },
+    { name: 'Technology', bps: 2,  color: '#86efac' },
+    { name: 'Healthcare', bps: 1,  color: '#86efac' },
+  ]
+  const max = 20
+  return (
+    <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-700">IG Spread Widening</span>
+        <MorningstarBadge />
+      </div>
+      <div className="space-y-1.5 mt-1">
+        {sectors.map(({ name, bps, color }) => (
+          <div key={name} className="flex items-center gap-2">
+            <span className="text-[10px] text-gray-500 w-18 shrink-0" style={{ width: 64 }}>{name}</span>
+            <div className="flex-1 h-4 bg-gray-50 rounded-sm overflow-hidden">
+              <div
+                className="h-full rounded-sm transition-all"
+                style={{ width: `${(bps / max) * 100}%`, backgroundColor: color }}
+              />
+            </div>
+            <span className="text-[10px] font-medium text-gray-600 w-8 text-right">+{bps}bp</span>
+          </div>
+        ))}
+      </div>
+      <p className="text-[9px] text-gray-400 mt-1">Day-over-day spread change (bps)</p>
+    </div>
+  )
+}
+
+// ── Scene: Dashboard ───────────────────────────────────────────────────────────
+
 function SceneDashboard({
   onSceneChange,
+  alertOpen,
+  onToggleAlert,
 }: {
   onSceneChange: (scene: IRMScene) => void
+  alertOpen: boolean
+  onToggleAlert: () => void
 }) {
   return (
     <>
-      <div
-        className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-center gap-4 cursor-pointer"
-        onClick={() => onSceneChange('alert-expanded')}
-      >
-        <div className="animate-pulse w-1 h-12 bg-amber-400 rounded-full" />
-        <div className="flex items-center gap-2 flex-1">
-          <AlertTriangle className="w-5 h-5 text-amber-500" />
-          <div>
-            <div className="font-semibold text-amber-900">
-              {MARKET_EVENT.title}
+      <style>{`
+        @keyframes alertIconPulse {
+          0%, 100% { color: rgb(245, 158, 11); }
+          50%       { color: rgb(220, 38, 38); }
+        }
+      `}</style>
+
+      {/* Alert banner */}
+      <div className="bg-amber-50 border border-amber-200 rounded-xl mb-4 overflow-hidden">
+
+        {/* Header row — always visible */}
+        <div className="p-4 flex items-start gap-3">
+          <AlertTriangle
+            className="w-5 h-5 shrink-0 mt-0.5"
+            style={{ animation: 'alertIconPulse 2s ease-in-out infinite' }}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-amber-900 transition-all duration-300">
+              {alertOpen ? MARKET_EVENT.title : 'Market Alert'}
             </div>
-            <div className="text-sm text-amber-700">
-              Crude {MARKET_EVENT.crudePctChange} overnight — {MARKET_EVENT.cause}
+            {alertOpen && (
+              <div className="text-sm text-amber-700 mt-0.5">
+                Crude {MARKET_EVENT.crudePctChange} overnight — {MARKET_EVENT.cause}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={onToggleAlert}
+            className="shrink-0 bg-amber-100 hover:bg-amber-200 active:bg-amber-300 text-amber-800 font-medium text-sm rounded-lg px-4 py-2 transition-colors self-start"
+          >
+            Review Impact
+          </button>
+        </div>
+
+        {/* Expanded content */}
+        {alertOpen && (
+          <div className="px-4 pb-5">
+            {/* Morningstar charts */}
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <RateCurveChart />
+              <SectorHeatmap />
+              <IGSpreadChart />
+            </div>
+
+            {/* Impact bullets */}
+            <div className="bg-white rounded-xl p-4 border border-gray-100 mb-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                Impact across asset classes
+              </p>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                {MARKET_EVENT.impacts.map((impact, i) => {
+                  const Icon = impactIcons[i] ?? Activity
+                  return (
+                    <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                      <Icon className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <span>{impact}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-amber-600">Source: Morningstar market data</span>
+                <span className="text-xs text-gray-400">{MARKET_EVENT.asOfTimestamp}</span>
+              </div>
+              <button
+                className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-5 py-2.5 text-sm font-medium transition-colors"
+                onClick={() => onSceneChange('triage')}
+              >
+                See Triage Impact →
+              </button>
             </div>
           </div>
-        </div>
-        <span className="text-sm font-medium text-indigo-600 whitespace-nowrap">
-          Review Impact →
-        </span>
+        )}
       </div>
+
+      <TierKPIBar />
       <AccountsGrid />
     </>
   )
@@ -468,13 +733,19 @@ function SceneOutreach({
 }
 
 export function IRMDashboard({ scene, onSceneChange }: IRMDashboardProps) {
+  const [alertOpen, setAlertOpen] = useState(false)
+
   return (
-    <div className="h-full overflow-y-auto bg-gray-50">
+    <div className="h-full overflow-y-auto bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
       <div className="max-w-7xl mx-auto px-6 py-6">
         <GreetingRow />
 
         {scene === 'dashboard' && (
-          <SceneDashboard onSceneChange={onSceneChange} />
+          <SceneDashboard
+            onSceneChange={onSceneChange}
+            alertOpen={alertOpen}
+            onToggleAlert={() => setAlertOpen(o => !o)}
+          />
         )}
 
         {scene === 'alert-expanded' && (

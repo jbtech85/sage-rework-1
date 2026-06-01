@@ -7,7 +7,9 @@ import { IRMDashboard } from "@/components/frontend/irm/IRMDashboard"
 import { AccountDetailView } from "@/components/frontend/irm/AccountDetailView"
 import { PhoneCallSimulator } from "@/components/frontend/irm/PhoneCallSimulator"
 import { CoworkPanel } from "@/components/frontend/irm/CoworkPanel"
-import { prefetchWorkIQContext } from "@/lib/advisorApi"
+import { prefetchWorkIQContext, MOCK_ADVISOR, getMockClientsForAdvisor } from "@/lib/advisorApi"
+import { SageChatPane, SageFloatingButton } from "@/components/frontend/shared/SageChatPane"
+import { AdvisorChatView } from "@/components/frontend/advisor/AdvisorChatView"
 
 export default function IRMApp() {
   const [scene, setScene] = useState<IRMScene>('dashboard')
@@ -15,6 +17,7 @@ export default function IRMApp() {
   const [showSettings, setShowSettings] = useState(false)
   const [isMockMode, setIsMockMode] = useState(true)
   const [swaUser, setSwaUser] = useState<{ name: string; email: string } | null>(null)
+  const [isChatPaneOpen, setIsChatPaneOpen] = useState(false)
 
   useEffect(() => {
     prefetchWorkIQContext()
@@ -185,6 +188,28 @@ export default function IRMApp() {
           />
         )}
       </main>
+
+      {/* Floating chat button */}
+      {!isChatPaneOpen && (
+        <SageFloatingButton
+          onClick={() => setIsChatPaneOpen(true)}
+          variant="advisor"
+        />
+      )}
+
+      {/* Chat pane */}
+      <SageChatPane
+        isOpen={isChatPaneOpen}
+        onClose={() => setIsChatPaneOpen(false)}
+        variant="advisor"
+      >
+        <AdvisorChatView
+          advisor={MOCK_ADVISOR}
+          clients={getMockClientsForAdvisor(MOCK_ADVISOR.id)}
+          isMockMode={isMockMode}
+          embedded
+        />
+      </SageChatPane>
 
       {/* Phone Call Simulator */}
       <PhoneCallSimulator
