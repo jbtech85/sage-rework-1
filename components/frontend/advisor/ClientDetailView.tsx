@@ -479,7 +479,7 @@ const ConversationsTab: React.FC<ConversationsTabProps> = ({ clientId, isMockMod
       <EmptyState
         icon={<MessageSquare className="w-8 h-8" />}
         title="No conversations yet"
-        description="This client hasn't chatted with Sage AI yet."
+        description="This client hasn't chatted with Woodgrove AI yet."
       />
     )
   }

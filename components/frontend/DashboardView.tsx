@@ -317,7 +317,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Two-column: Retirement Progress + Sage CTA */}
+        {/* Two-column: Retirement Progress + Woodgrove CTA */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Coverage Progress */}
           <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">

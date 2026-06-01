@@ -180,7 +180,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
     conversationIdRef.current = null
     setMessages([{
       role: "assistant",
-      content: "Hello! I'm Sage, your AI underwriting assistant. I can help you explore different coverage scenarios, analyze risk outcomes, and recommend specific products and strategies. Try asking me something like 'What if I add umbrella liability coverage?' or use one of the quick scenarios below.",
+      content: "Hello! I'm Woodgrove, your AI underwriting assistant. I can help you explore different coverage scenarios, analyze risk outcomes, and recommend specific products and strategies. Try asking me something like 'What if I add umbrella liability coverage?' or use one of the quick scenarios below.",
       timestamp: Date.now(),
       analysis: null,
       showQuickScenarios: true,
@@ -513,7 +513,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <h2 className="font-semibold text-gray-900">Consult Sage for Advice</h2>
+            <h2 className="font-semibold text-gray-900">Consult Woodgrove for Advice</h2>
           </div>
           
           {/* History & New Chat buttons (standalone mode) */}
@@ -698,7 +698,7 @@ export const PlanningView: React.FC<PlanningViewProps> = ({
                       This scenario looks complex — share with your advisor?
                     </h4>
                     <p className="text-sm text-emerald-800 mt-1 leading-relaxed">
-                      With your consent, Sage will share this scenario analysis with your advisor so they can review it and follow up with you.
+                      With your consent, Woodgrove will share this scenario analysis with your advisor so they can review it and follow up with you.
                     </p>
 
                     {message.consentRequest.status === "pending" && (

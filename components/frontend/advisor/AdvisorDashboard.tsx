@@ -542,7 +542,7 @@ const BriefMeModal: React.FC<BriefMeModalProps> = ({ advisor, onClose, isMockMod
               <div className="px-4 py-3 space-y-3 text-sm text-gray-600 max-h-48 overflow-y-auto">
                 {workiqContext.sage_emails && (
                   <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Recent Sage Emails</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Recent Woodgrove Emails</p>
                     <div className="bg-blue-50 rounded-lg p-3 text-gray-700 whitespace-pre-wrap text-xs leading-relaxed">
                       {workiqContext.sage_emails.slice(0, 500)}
                       {workiqContext.sage_emails.length > 500 && "..."}
@@ -551,7 +551,7 @@ const BriefMeModal: React.FC<BriefMeModalProps> = ({ advisor, onClose, isMockMod
                 )}
                 {workiqContext.sage_meetings && (
                   <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Sage Meeting Info</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Woodgrove Meeting Info</p>
                     <div className="bg-blue-50 rounded-lg p-3 text-gray-700 whitespace-pre-wrap text-xs leading-relaxed">
                       {workiqContext.sage_meetings.slice(0, 800)}
                       {workiqContext.sage_meetings.length > 800 && "..."}
@@ -916,7 +916,7 @@ export const AdvisorDashboard: React.FC<AdvisorDashboardProps> = ({
           </Card>
         </div>
 
-        {/* Sage AI CTA */}
+        {/* Woodgrove AI CTA */}
         <button
           onClick={onOpenChat}
           className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-6 text-left text-white hover:from-gray-800 hover:via-gray-700 hover:to-gray-800 transition-all duration-300 shadow-xl shadow-gray-900/30 hover:shadow-2xl hover:shadow-gray-900/40 hover:-translate-y-0.5 group relative overflow-hidden"
@@ -929,7 +929,7 @@ export const AdvisorDashboard: React.FC<AdvisorDashboardProps> = ({
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold mb-1 tracking-tight">Consult Sage for Advice</h3>
+              <h3 className="text-lg font-semibold mb-1 tracking-tight">Consult Woodgrove for Advice</h3>
               <p className="text-gray-400 text-sm leading-relaxed">
                 Get regulatory guidance, client insights, and planning strategies powered by AI.
               </p>

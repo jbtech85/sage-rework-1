@@ -76,7 +76,7 @@ const MOCK_ESCALATIONS: EscalationTicket[] = [
     advisor_id: "advisor-jane",
     reason: "user_requested",
     client_question: "I want to discuss my overall retirement strategy with a human advisor",
-    context_summary: "Client requested direct advisor consultation after exploring multiple scenarios. Has been using Sage actively for 3 months.",
+    context_summary: "Client requested direct advisor consultation after exploring multiple scenarios. Has been using Woodgrove actively for 3 months.",
     status: "in_progress",
     priority: "medium",
     created_at: "2026-02-09T15:45:00Z",
@@ -676,7 +676,7 @@ export const EscalationQueue: React.FC<EscalationQueueProps> = ({
           <EmptyState
             icon={<AlertTriangle className="w-8 h-8" />}
             title="No escalations"
-            description="All client questions are being handled by Sage AI."
+            description="All client questions are being handled by Woodgrove AI."
           />
         ) : (
           <div className="space-y-3">

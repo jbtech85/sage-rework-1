@@ -715,7 +715,7 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-xl font-semibold text-gray-900">Sage AI for Advisors</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Woodgrove AI for Advisors</h1>
                 <PoweredByLabel product="Copilot" variant="light" />
               </div>
               <p className="text-sm text-gray-500">Regulatory guidance, client insights, and planning strategies</p>
@@ -919,7 +919,7 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
           </div>
           <div className="flex items-center justify-center gap-2 mt-2">
             <p className="text-xs text-gray-400 text-center">
-              Sage AI provides guidance based on current regulations. Always verify advice and document recommendations.
+              Woodgrove AI provides guidance based on current regulations. Always verify advice and document recommendations.
             </p>
           </div>
         </div>
