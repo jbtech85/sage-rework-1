@@ -178,11 +178,12 @@ function TierKPIBar() {
   )
 }
 
-function GreetingRow() {
+function GreetingRow({ scene }: { scene: IRMScene }) {
+  const isTriage = scene === 'triage'
   return (
     <div className="flex items-center justify-between mb-6">
       <h1 className="text-2xl font-semibold text-gray-900">
-        Good morning, Dani — Accounts Overview
+        {isTriage ? 'Triage Panel' : 'Good morning, Dani — Accounts Overview'}
       </h1>
       <div className="flex items-center gap-2">
         <span className="bg-indigo-50 text-indigo-700 rounded-full px-3 py-1 text-sm font-medium">
@@ -552,88 +553,94 @@ function SceneTriage({
     <>
       <CollapsedAlertPill onSceneChange={onSceneChange} />
 
-      <div className="flex items-baseline gap-3 mb-1">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Book-Wide Triage
-        </h2>
-        <span className="text-sm text-gray-500">
-          5 of 10 accounts materially affected
-        </span>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6 mt-4">
-        {/* Left: Affected */}
-        <div>
-          <div className="bg-red-50 text-red-700 rounded-lg px-3 py-2 text-sm font-medium mb-3">
+      {/* Affected Accounts */}
+      <div className="mb-2">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="bg-red-50 text-red-700 rounded-lg px-3 py-2 text-sm font-medium">
             Affected Accounts (5)
           </div>
-          {affectedAccounts.map((account, index) => {
-            const isContoso = account.id === 'contoso-capital'
-            return (
-              <div
-                key={account.id}
-                className={`bg-white rounded-xl p-4 border border-gray-100 shadow-sm mb-3 cursor-pointer ${
-                  isContoso ? 'ring-2 ring-indigo-300 bg-indigo-50/30' : ''
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center shrink-0">
-                    {index + 1}
-                  </div>
-                  <span className="font-semibold text-gray-900">
-                    {account.name}
-                  </span>
+          <span className="text-sm text-gray-500">5 of 10 accounts materially affected</span>
+        </div>
+
+        {affectedAccounts.map((account, index) => {
+          const isContoso = account.id === 'contoso-capital'
+          return (
+            <div
+              key={account.id}
+              onClick={isContoso ? () => onSceneChange('account-detail') : undefined}
+              className={`bg-white rounded-xl p-4 border shadow-sm mb-3 flex items-center gap-4 ${
+                isContoso
+                  ? 'ring-2 ring-indigo-300 bg-indigo-50/30 border-indigo-100 cursor-pointer hover:bg-indigo-50/50'
+                  : 'border-gray-100'
+              }`}
+            >
+              {/* Rank */}
+              <div className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                {index + 1}
+              </div>
+
+              {/* Name + badges + reasons */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-gray-900">{account.name}</span>
                   <TierBadge tier={account.tier} />
-                  <span className="ml-auto text-sm font-medium text-gray-700">
-                    {formatAUM(account.aumBillions)}
-                  </span>
+                  <span className="text-sm text-gray-500">{formatAUM(account.aumBillions)}</span>
                   <SeverityBadge severity={account.impactSeverity} />
                 </div>
-                <div className="flex flex-wrap gap-1 mt-1">
+                <div className="flex flex-wrap gap-1 mt-1.5">
                   {account.impactReasons.map((reason) => (
-                    <span
-                      key={reason}
-                      className="text-xs bg-gray-100 text-gray-600 rounded px-2 py-0.5"
-                    >
+                    <span key={reason} className="text-xs bg-gray-100 text-gray-600 rounded px-2 py-0.5">
                       {reason}
                     </span>
                   ))}
                 </div>
               </div>
-            )
-          })}
-          <button
-            className="bg-indigo-600 text-white rounded-xl px-6 py-3 w-full font-medium mt-2 hover:bg-indigo-700 transition-colors"
-            onClick={() => onSceneChange('outreach')}
-          >
-            Plan Outreach →
-          </button>
-        </div>
 
-        {/* Right: Minimal */}
-        <div>
-          <div className="bg-gray-100 text-gray-500 rounded-lg px-3 py-2 text-sm font-medium mb-3">
+              {/* Outreach info */}
+              <div className="flex items-center gap-5 shrink-0">
+                <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                  <ChannelIcon channel={account.contact.preferredChannel} />
+                  <span>{channelLabel(account.contact.preferredChannel)}</span>
+                </div>
+                <span className="text-sm text-gray-700 whitespace-nowrap">{account.outreach.proposedTime}</span>
+                <StatusBadge status={account.outreach.status} />
+              </div>
+
+              {/* Engage button — Contoso only */}
+              {isContoso && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onSceneChange('account-detail') }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors shrink-0"
+                >
+                  Engage →
+                </button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Minimal Impact */}
+      <div className="mt-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="bg-gray-100 text-gray-500 rounded-lg px-3 py-2 text-sm font-medium">
             Minimal Impact (5)
           </div>
+          <span className="text-sm text-gray-400 italic">No action required today</span>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
           {minimalAccounts.map((account) => (
-            <div
-              key={account.id}
-              className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm mb-2 opacity-60"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">
-                  {account.name}
-                </span>
+            <div key={account.id} className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm opacity-60">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-medium text-gray-700">{account.name}</span>
                 <TierBadge tier={account.tier} />
-                <span className="ml-auto text-sm text-gray-500">
-                  {formatAUM(account.aumBillions)}
-                </span>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-xs text-gray-400">{account.mandateType}</span>
+                <span className="text-xs text-gray-500">{formatAUM(account.aumBillions)}</span>
               </div>
             </div>
           ))}
-          <p className="text-sm text-gray-400 mt-4 italic">
-            No action required today
-          </p>
         </div>
       </div>
     </>
@@ -738,7 +745,7 @@ export function IRMDashboard({ scene, onSceneChange }: IRMDashboardProps) {
   return (
     <div className="h-full overflow-y-auto bg-gray-50" style={{ scrollbarGutter: 'stable' }}>
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <GreetingRow />
+        <GreetingRow scene={scene} />
 
         {scene === 'dashboard' && (
           <SceneDashboard
