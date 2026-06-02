@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Leaf, Settings, WifiOff, Wifi, LogOut, User } from "lucide-react"
+import { Leaf, Settings, WifiOff, Wifi, LogOut, User, X } from "lucide-react"
 import type { IRMScene } from "@/lib/irmTypes"
 import { IRMDashboard } from "@/components/frontend/irm/IRMDashboard"
-import { AccountDetailView } from "@/components/frontend/irm/AccountDetailView"
+import { OrchestrationView } from "@/components/frontend/irm/OrchestrationView"
 import { PhoneCallSimulator } from "@/components/frontend/irm/PhoneCallSimulator"
 import { CoworkPanel } from "@/components/frontend/irm/CoworkPanel"
 import { prefetchWorkIQContext, MOCK_ADVISOR, getMockClientsForAdvisor } from "@/lib/advisorApi"
-import { SageChatPane, SageFloatingButton } from "@/components/frontend/shared/SageChatPane"
+import { SageFloatingButton } from "@/components/frontend/shared/SageChatPane"
 import { AdvisorChatView } from "@/components/frontend/advisor/AdvisorChatView"
 
 export default function IRMApp() {
@@ -18,6 +18,8 @@ export default function IRMApp() {
   const [isMockMode, setIsMockMode] = useState(true)
   const [swaUser, setSwaUser] = useState<{ name: string; email: string } | null>(null)
   const [isChatPaneOpen, setIsChatPaneOpen] = useState(false)
+  const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set())
+  const [activeAccountId, setActiveAccountId] = useState('contoso-capital')
 
   useEffect(() => {
     prefetchWorkIQContext()
@@ -167,49 +169,74 @@ export default function IRMApp() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-hidden">
-        {dashboardScenes.includes(scene) && (
-          <IRMDashboard scene={scene} onSceneChange={setScene} />
-        )}
-        {accountScenes.includes(scene) && (
-          <AccountDetailView
-            scene={scene}
-            callSegmentIndex={callSegmentIndex}
-            onSceneChange={setScene}
-            onBack={() => setScene('outreach')}
-          />
-        )}
-        {coworkScenes.includes(scene) && (
-          <CoworkPanel
-            scene={scene}
-            onSceneChange={setScene}
-            onBack={() => setScene('account-detail')}
-          />
-        )}
-      </main>
+      {/* Main Content + Agent Sidebar */}
+      <div className="flex-1 flex overflow-hidden">
+        <main className="flex-1 overflow-hidden">
+          {dashboardScenes.includes(scene) && (
+            <IRMDashboard
+              scene={scene}
+              onSceneChange={setScene}
+              approvedIds={approvedIds}
+              onApprove={(id) => setApprovedIds(prev => new Set([...prev, id]))}
+              onSelectAccount={(id) => setActiveAccountId(id)}
+            />
+          )}
+          {accountScenes.includes(scene) && (
+            <OrchestrationView
+              scene={scene}
+              initialAccountId={activeAccountId}
+              approvedIds={approvedIds}
+              onApprove={(id) => setApprovedIds(prev => new Set([...prev, id]))}
+              onSceneChange={setScene}
+              onBack={() => setScene('triage')}
+              callSegmentIndex={callSegmentIndex}
+            />
+          )}
+          {coworkScenes.includes(scene) && (
+            <CoworkPanel
+              scene={scene}
+              onSceneChange={setScene}
+              onBack={() => setScene('account-detail')}
+            />
+          )}
+        </main>
 
-      {/* Floating chat button */}
+        {/* Agent sidebar — slides in at 350px, shrinks main */}
+        <div
+          className="flex-shrink-0 overflow-hidden transition-all duration-300 border-l border-gray-100"
+          style={{ width: isChatPaneOpen ? 500 : 0 }}
+        >
+          <div className="w-[500px] h-full flex flex-col">
+            <div className="bg-indigo-900 text-white px-4 py-3 flex items-center gap-2 flex-shrink-0">
+              <Leaf className="w-4 h-4 text-indigo-300" />
+              <span className="text-sm font-semibold">Woodgrove AI</span>
+              <button
+                onClick={() => setIsChatPaneOpen(false)}
+                className="ml-auto text-indigo-300 hover:text-white transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <AdvisorChatView
+                advisor={MOCK_ADVISOR}
+                clients={getMockClientsForAdvisor(MOCK_ADVISOR.id)}
+                isMockMode={isMockMode}
+                embedded
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating chat button — hidden while sidebar is open */}
       {!isChatPaneOpen && (
         <SageFloatingButton
           onClick={() => setIsChatPaneOpen(true)}
           variant="advisor"
         />
       )}
-
-      {/* Chat pane */}
-      <SageChatPane
-        isOpen={isChatPaneOpen}
-        onClose={() => setIsChatPaneOpen(false)}
-        variant="advisor"
-      >
-        <AdvisorChatView
-          advisor={MOCK_ADVISOR}
-          clients={getMockClientsForAdvisor(MOCK_ADVISOR.id)}
-          isMockMode={isMockMode}
-          embedded
-        />
-      </SageChatPane>
 
       {/* Phone Call Simulator */}
       <PhoneCallSimulator

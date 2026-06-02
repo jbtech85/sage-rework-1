@@ -20,6 +20,9 @@ import {
 interface IRMDashboardProps {
   scene: IRMScene
   onSceneChange: (scene: IRMScene) => void
+  approvedIds: Set<string>
+  onApprove: (id: string) => void
+  onSelectAccount: (id: string) => void
 }
 
 function formatAUM(billions: number): string {
@@ -546,9 +549,16 @@ function SceneAlertExpanded({
 
 function SceneTriage({
   onSceneChange,
+  approvedIds,
+  onApprove,
+  onSelectAccount,
 }: {
   onSceneChange: (scene: IRMScene) => void
+  approvedIds: Set<string>
+  onApprove: (id: string) => void
+  onSelectAccount: (id: string) => void
 }) {
+
   return (
     <>
       <CollapsedAlertPill onSceneChange={onSceneChange} />
@@ -563,16 +573,15 @@ function SceneTriage({
         </div>
 
         {affectedAccounts.map((account, index) => {
-          const isContoso = account.id === 'contoso-capital'
+          const isApproved = approvedIds.has(account.id)
+
           return (
             <div
               key={account.id}
-              onClick={isContoso ? () => onSceneChange('account-detail') : undefined}
-              className={`bg-white rounded-xl p-4 border shadow-sm mb-3 flex items-center gap-4 ${
-                isContoso
-                  ? 'ring-2 ring-indigo-300 bg-indigo-50/30 border-indigo-100 cursor-pointer hover:bg-indigo-50/50'
-                  : 'border-gray-100'
-              }`}
+              onClick={() => { onSelectAccount(account.id); onSceneChange('account-detail') }}
+              className={`bg-white rounded-xl p-4 border border-gray-100 shadow-sm mb-3 flex items-center gap-4 transition-all cursor-pointer hover:ring-2 hover:ring-indigo-200 hover:bg-indigo-50/30
+                ${!isApproved ? 'bg-amber-50/30 border-amber-100' : ''}
+              `}
             >
               {/* Rank */}
               <div className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-semibold flex items-center justify-center shrink-0">
@@ -597,24 +606,33 @@ function SceneTriage({
               </div>
 
               {/* Outreach info */}
-              <div className="flex items-center gap-5 shrink-0">
+              <div className="flex items-center gap-4 shrink-0">
                 <div className="flex items-center gap-1.5 text-sm text-gray-600">
                   <ChannelIcon channel={account.contact.preferredChannel} />
                   <span>{channelLabel(account.contact.preferredChannel)}</span>
                 </div>
                 <span className="text-sm text-gray-700 whitespace-nowrap">{account.outreach.proposedTime}</span>
-                <StatusBadge status={account.outreach.status} />
-              </div>
 
-              {/* Engage button — Contoso only */}
-              {isContoso && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onSceneChange('account-detail') }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors shrink-0"
-                >
-                  Engage →
-                </button>
-              )}
+                {/* Approve / Adjust (pending) or Status badge (approved) */}
+                {isApproved ? (
+                  <StatusBadge status={account.outreach.status} />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onApprove(account.id) }}
+                      className="bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg px-3 py-1.5 transition-colors"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="bg-white hover:bg-gray-50 text-gray-600 text-xs font-medium rounded-lg px-3 py-1.5 border border-gray-200 transition-colors"
+                    >
+                      Adjust
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )
         })}
@@ -739,7 +757,7 @@ function SceneOutreach({
   )
 }
 
-export function IRMDashboard({ scene, onSceneChange }: IRMDashboardProps) {
+export function IRMDashboard({ scene, onSceneChange, approvedIds, onApprove, onSelectAccount }: IRMDashboardProps) {
   const [alertOpen, setAlertOpen] = useState(false)
 
   return (
@@ -760,7 +778,12 @@ export function IRMDashboard({ scene, onSceneChange }: IRMDashboardProps) {
         )}
 
         {scene === 'triage' && (
-          <SceneTriage onSceneChange={onSceneChange} />
+          <SceneTriage
+            onSceneChange={onSceneChange}
+            approvedIds={approvedIds}
+            onApprove={onApprove}
+            onSelectAccount={onSelectAccount}
+          />
         )}
 
         {scene === 'outreach' && (

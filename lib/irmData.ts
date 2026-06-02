@@ -1,6 +1,6 @@
 import type {
   IRMAccount,
-  ContosoDetail,
+  AccountDetail,
   CallSegment,
   MarketEvent,
 } from './irmTypes'
@@ -231,7 +231,7 @@ export const ACCOUNTS: IRMAccount[] = [
   },
 ]
 
-export const CONTOSO_DETAIL: ContosoDetail = {
+export const CONTOSO_DETAIL: AccountDetail = {
   id: 'contoso-capital',
   name: 'Contoso Capital',
   tier: 1,
@@ -266,6 +266,90 @@ export const CONTOSO_DETAIL: ContosoDetail = {
       detail: 'Elevated — 30 days',
     },
   ],
+}
+
+const FABRIKAM_DETAIL: AccountDetail = {
+  id: 'fabrikam-pension',
+  name: 'Fabrikam Pension Fund',
+  tier: 2,
+  aumBillions: 1.18,
+  segment: 'North America',
+  mandateType: 'LDI',
+  benchmark: 'Liability-Driven Composite',
+  renewalDays: null,
+  nextReview: null,
+  netFlow90D: 12,
+  allocation: { equities: 15, fixedIncome: 68, privateCredit: 5, realAssets: 8, liquidity: 4 },
+  posture: [
+    { label: 'Duration Sensitivity', status: 'critical', detail: 'Significantly elevated — long-end repricing' },
+    { label: 'Liability Matching', status: 'warning', detail: 'Hedge ratio drift under review' },
+    { label: 'Cash Flow Coverage', status: 'ok', detail: 'Within acceptable range' },
+  ],
+}
+
+const BELLOWS_DETAIL: AccountDetail = {
+  id: 'bellows-insurance',
+  name: 'Bellows Insurance Group',
+  tier: 2,
+  aumBillions: 0.79,
+  segment: 'North America',
+  mandateType: 'Credit',
+  benchmark: 'IG Credit Blend',
+  renewalDays: null,
+  nextReview: null,
+  netFlow90D: -8,
+  allocation: { equities: 20, fixedIncome: 55, privateCredit: 15, realAssets: 5, liquidity: 5 },
+  posture: [
+    { label: 'Credit Concentration', status: 'warning', detail: 'IG financials exposure elevated' },
+    { label: 'Regulatory Capital', status: 'warning', detail: 'Spread widening increases RBC requirement' },
+    { label: 'Liquidity Buffer', status: 'ok', detail: 'Within regulatory minimums' },
+  ],
+}
+
+const NORTHWIND_DETAIL: AccountDetail = {
+  id: 'northwind-asset',
+  name: 'Northwind Asset Mgmt',
+  tier: 2,
+  aumBillions: 0.63,
+  segment: 'North America',
+  mandateType: 'Equity',
+  benchmark: 'MSCI North America',
+  renewalDays: null,
+  nextReview: null,
+  netFlow90D: -18,
+  allocation: { equities: 72, fixedIncome: 10, privateCredit: 5, realAssets: 8, liquidity: 5 },
+  posture: [
+    { label: 'Equity Drawdown', status: 'critical', detail: 'Energy-driven volatility spike' },
+    { label: 'Sector Concentration', status: 'warning', detail: 'Energy & utilities overweight vs. benchmark' },
+    { label: 'Portfolio Beta', status: 'ok', detail: 'Within mandate tolerance' },
+  ],
+}
+
+const ADATUM_DETAIL: AccountDetail = {
+  id: 'adatum-treasury',
+  name: 'Adatum Group Treasury',
+  tier: 3,
+  aumBillions: 0.32,
+  segment: 'North America',
+  mandateType: 'Liquidity',
+  benchmark: 'SOFR + 25bps',
+  renewalDays: null,
+  nextReview: null,
+  netFlow90D: 5,
+  allocation: { equities: 5, fixedIncome: 30, privateCredit: 0, realAssets: 0, liquidity: 65 },
+  posture: [
+    { label: 'Yield Enhancement', status: 'warning', detail: 'Short-end rates under pressure' },
+    { label: 'Duration', status: 'ok', detail: 'Within short-duration mandate' },
+    { label: 'Counterparty Risk', status: 'ok', detail: 'All counterparties investment-grade' },
+  ],
+}
+
+export const ACCOUNT_DETAILS: Record<string, AccountDetail> = {
+  'contoso-capital': CONTOSO_DETAIL,
+  'fabrikam-pension': FABRIKAM_DETAIL,
+  'bellows-insurance': BELLOWS_DETAIL,
+  'northwind-asset': NORTHWIND_DETAIL,
+  'adatum-treasury': ADATUM_DETAIL,
 }
 
 export const CALL_SEGMENTS: CallSegment[] = [

@@ -33,16 +33,16 @@ export interface IRMAccount {
   }
 }
 
-export interface ContosoDetail {
+export interface AccountDetail {
   id: string
   name: string
-  tier: 1
+  tier: 1 | 2 | 3
   aumBillions: number
   segment: string
   mandateType: string
   benchmark: string
-  renewalDays: number
-  nextReview: string
+  renewalDays: number | null
+  nextReview: string | null
   netFlow90D: number
   allocation: {
     equities: number
@@ -57,6 +57,9 @@ export interface ContosoDetail {
     detail: string
   }>
 }
+
+/** @deprecated Use AccountDetail */
+export type ContosoDetail = AccountDetail
 
 export interface AgentIntel {
   type: 'tracking' | 'talking-point' | 'data-card' | 'next-steps'
