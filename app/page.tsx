@@ -15,7 +15,7 @@ export default function IRMApp() {
   const [scene, setScene] = useState<IRMScene>('dashboard')
   const [callSegmentIndex, setCallSegmentIndex] = useState(0)
   const [showSettings, setShowSettings] = useState(false)
-  const [isMockMode, setIsMockMode] = useState(true)
+  const [isMockMode, setIsMockMode] = useState(false)
   const [swaUser, setSwaUser] = useState<{ name: string; email: string } | null>(null)
   const [isChatPaneOpen, setIsChatPaneOpen] = useState(false)
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set())
