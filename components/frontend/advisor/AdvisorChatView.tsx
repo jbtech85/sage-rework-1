@@ -5,10 +5,6 @@ import {
   Send,
   Loader2,
   Sparkles,
-  RefreshCw,
-  BookOpen,
-  Scale,
-  DollarSign,
   Copy,
   Check,
   Target,
@@ -17,6 +13,7 @@ import {
   History,
   Plus,
   Trash2,
+  TrendingUp,
 } from "lucide-react"
 import type { AdvisorProfile, ClientProfile } from "@/lib/types"
 import { Card } from "@/components/frontend/shared/UIComponents"
@@ -62,46 +59,11 @@ interface QuickQuery {
 
 const QUICK_QUERIES: QuickQuery[] = [
   {
-    id: "us-auto-minimums",
-    label: "US Auto Liability Minimums",
-    icon: <DollarSign className="w-4 h-4" />,
-    prompt: "What are the typical US state minimum auto liability requirements, and when should I recommend higher limits for an applicant?",
-    category: "regulatory",
-  },
-  {
-    id: "nfip-flood",
-    label: "NFIP Flood Requirements",
-    icon: <RefreshCw className="w-4 h-4" />,
-    prompt: "Can you summarize the NFIP mandatory flood purchase requirement and coverage limits for residential and commercial properties?",
-    category: "regulatory",
-  },
-  {
-    id: "workers-comp",
-    label: "Workers Comp Obligations",
-    icon: <DollarSign className="w-4 h-4" />,
-    prompt: "What are US employer obligations for workers compensation coverage, and how does this vary by state?",
-    category: "regulatory",
-  },
-  {
-    id: "surplus-lines",
-    label: "Surplus Lines Tax",
-    icon: <Scale className="w-4 h-4" />,
-    prompt: "How should I explain surplus lines premium tax to a commercial applicant, and what rate range applies?",
-    category: "planning",
-  },
-  {
-    id: "ca-licat",
-    label: "OSFI LICAT Requirements",
-    icon: <Scale className="w-4 h-4" />,
-    prompt: "Can you summarize OSFI LICAT requirements for Canadian life insurers and what the supervisory target ratio means in practice?",
-    category: "planning",
-  },
-  {
-    id: "ca-pipeda",
-    label: "PIPEDA & Health Data",
-    icon: <BookOpen className="w-4 h-4" />,
-    prompt: "What are the PIPEDA requirements around applicant health data collection and consent for Canadian insurance underwriting?",
-    category: "regulatory",
+    id: "market-context",
+    label: "Market Context: Contoso Capital",
+    icon: <TrendingUp className="w-4 h-4" />,
+    prompt: "What's the market context relevant to Contoso Capital's mandate given today's energy shock?",
+    category: "client",
   },
 ]
 
