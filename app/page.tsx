@@ -79,8 +79,8 @@ export default function IRMApp() {
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          {/* Left: Logo + Title */}
-          <div className="flex items-center gap-3">
+          {/* Left: Logo + Title — links to home (full reload resets demo state) */}
+          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-9 h-9 bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-xl flex items-center justify-center shadow-lg">
               <Leaf className="w-5 h-5 text-indigo-400" />
             </div>
@@ -88,7 +88,7 @@ export default function IRMApp() {
               <h1 className="text-lg font-semibold text-gray-900 tracking-tight">Woodgrove</h1>
               <p className="text-[11px] text-gray-400 font-medium">Institutional Relationship Manager</p>
             </div>
-          </div>
+          </a>
 
           {/* Right: User indicator + Settings */}
           <div className="flex items-center gap-3">

@@ -6,6 +6,7 @@ import { ACCOUNTS, MARKET_EVENT } from '@/lib/irmData'
 import {
   AlertTriangle,
   TrendingUp,
+  TrendingDown,
   Activity,
   Layers,
   Droplets,
@@ -15,6 +16,8 @@ import {
   BarChart2,
   Smartphone,
   ChevronRight,
+  Landmark,
+  Users,
 } from 'lucide-react'
 
 interface IRMDashboardProps {
@@ -144,6 +147,75 @@ const tierColors: Record<number, { bar: string; label: string; badge: string }> 
   3: { bar: 'bg-gray-400',   label: 'text-gray-600',   badge: 'bg-gray-50 border-gray-200 text-gray-600' },
 }
 
+function MetricsRow() {
+  const metrics = [
+    {
+      title: 'Total AUM',
+      value: '$7.42B',
+      detail: 'Across all mandates',
+      icon: Landmark,
+      iconColor: 'text-indigo-500',
+      iconBg: 'bg-indigo-50',
+      valueColor: 'text-gray-900',
+    },
+    {
+      title: 'Annual Revenue',
+      value: '$20.2M',
+      detail: 'Fee income YTD',
+      icon: TrendingUp,
+      iconColor: 'text-emerald-500',
+      iconBg: 'bg-emerald-50',
+      valueColor: 'text-gray-900',
+    },
+    {
+      title: 'Relationships',
+      value: '10',
+      detail: (
+        <span>
+          <span className="text-emerald-600 font-medium">5 healthy</span>
+          {' · '}
+          <span className="text-amber-600 font-medium">4 attention</span>
+          {' · '}
+          <span className="text-red-500 font-medium">1 at risk</span>
+        </span>
+      ),
+      icon: Users,
+      iconColor: 'text-violet-500',
+      iconBg: 'bg-violet-50',
+      valueColor: 'text-gray-900',
+    },
+    {
+      title: 'Avg. YTD Alpha',
+      value: '−5bps',
+      detail: 'Book: +7.5% vs +7.6% benchmark',
+      icon: TrendingDown,
+      iconColor: 'text-red-500',
+      iconBg: 'bg-red-50',
+      valueColor: 'text-red-600',
+    },
+  ] as const
+
+  return (
+    <div className="grid grid-cols-4 gap-4 mb-4">
+      {metrics.map((m) => {
+        const Icon = m.icon
+        return (
+          <div key={m.title} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">{m.title}</span>
+              <div className={`${m.iconBg} rounded-lg p-1.5`}>
+                <Icon className={`w-4 h-4 ${m.iconColor}`} />
+              </div>
+            </div>
+            <div className={`text-[26px] font-bold ${m.valueColor} mb-1 leading-none`}>{m.value}</div>
+            <div className="text-xs text-gray-400 leading-snug">{m.detail}</div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function TierKPIBar() {
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-4">
@@ -200,26 +272,94 @@ function GreetingRow({ scene }: { scene: IRMScene }) {
   )
 }
 
-function AccountsGrid() {
+function healthStatus(severity: string): { label: string; className: string } {
+  if (severity === 'elevated') return { label: 'At Risk', className: 'bg-red-50 text-red-700' }
+  if (severity === 'moderate' || severity === 'low-moderate') return { label: 'Attention', className: 'bg-amber-50 text-amber-700' }
+  return { label: 'Healthy', className: 'bg-green-50 text-green-700' }
+}
+
+function reviewDaysBadge(days: number): string {
+  if (days <= 7) return 'bg-red-50 text-red-600'
+  if (days <= 14) return 'bg-amber-50 text-amber-600'
+  return 'bg-indigo-50 text-indigo-600'
+}
+
+function daysFromNow(days: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+const UPCOMING_REVIEWS = [
+  { name: 'Contoso Capital',       days: 20 },
+  { name: 'Pinnacle State Pension', days: 18 },
+  { name: 'Vantage Capital Group',  days: 15 },
+  { name: 'Apex Municipal Fund',    days: 7  },
+]
+
+function RelationshipsAndReviews() {
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {ACCOUNTS.map((account) => (
-        <div
-          key={account.id}
-          className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm"
-        >
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-medium text-gray-900">{account.name}</span>
-            <TierBadge tier={account.tier} />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">
-              {formatAUM(account.aumBillions)}
-            </span>
-            <span className="text-sm text-gray-500">{account.mandateType}</span>
-          </div>
+    <div className="grid grid-cols-3 gap-4 items-start">
+
+      {/* Relationships — 2/3 width */}
+      <div className="col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-800">Relationships</h3>
         </div>
-      ))}
+        <div>
+          {ACCOUNTS.map((account, i) => {
+            const { label, className } = healthStatus(account.impactSeverity)
+            return (
+              <div
+                key={account.id}
+                className={`flex items-center gap-4 px-5 py-3 ${i < ACCOUNTS.length - 1 ? 'border-b border-gray-50' : ''} hover:bg-gray-50 transition-colors`}
+              >
+                {/* Name + tier */}
+                <div className="flex items-center gap-2 w-56 shrink-0">
+                  <span className="text-sm font-medium text-gray-900 truncate">{account.name}</span>
+                  <TierBadge tier={account.tier} />
+                </div>
+
+                {/* Mandate */}
+                <span className="text-xs text-gray-400 w-28 shrink-0">{account.mandateType}</span>
+
+                {/* AUM */}
+                <span className="text-sm font-medium text-gray-700 w-20 shrink-0">{formatAUM(account.aumBillions)}</span>
+
+                {/* Status */}
+                <div className="ml-auto">
+                  <span className={`text-xs font-medium rounded-full px-2.5 py-1 ${className}`}>
+                    {label}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Upcoming Reviews — 1/3 width */}
+      <div className="col-span-1 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-800">Upcoming Reviews</h3>
+        </div>
+        <div className="p-4 space-y-3">
+          {UPCOMING_REVIEWS.map(({ name, days }) => (
+            <div key={name} className="flex items-start gap-3">
+              {/* Day badge */}
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${reviewDaysBadge(days)}`}>
+                {days}d
+              </div>
+              {/* Name + date */}
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{daysFromNow(days)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
     </div>
   )
 }
@@ -480,7 +620,8 @@ function SceneDashboard({
       </div>
 
       <TierKPIBar />
-      <AccountsGrid />
+      <MetricsRow />
+      <RelationshipsAndReviews />
     </>
   )
 }
@@ -542,7 +683,7 @@ function SceneAlertExpanded({
         </button>
       </div>
 
-      <AccountsGrid />
+      <RelationshipsAndReviews />
     </>
   )
 }
