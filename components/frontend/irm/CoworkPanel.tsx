@@ -24,7 +24,7 @@ In the meantime, we continue to monitor exposure positions against the mandate's
 Please let us know if there are additional questions or areas you would like addressed ahead of the pre-renewal review.
 
 Best regards,
-Dani`)
+Serena`)
   const [memoEditing, setMemoEditing] = useState(false)
 
   return (

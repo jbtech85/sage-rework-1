@@ -357,7 +357,7 @@ export const CALL_SEGMENTS: CallSegment[] = [
     id: 'opening',
     label: 'Opening',
     clientStatement:
-      'Good morning, Dani. Thanks for reaching out — I saw the crude move this morning. What are we looking at on our end?',
+      'Good morning, Serena. Thanks for reaching out — I saw the crude move this morning. What are we looking at on our end?',
     agentIntel: {
       type: 'tracking',
       headline: 'Call started — tracking topics',

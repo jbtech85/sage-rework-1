@@ -186,7 +186,7 @@ function GreetingRow({ scene }: { scene: IRMScene }) {
   return (
     <div className="flex items-center justify-between mb-6">
       <h1 className="text-2xl font-semibold text-gray-900">
-        {isTriage ? 'Triage Panel' : 'Good morning, Dani — Accounts Overview'}
+        {isTriage ? 'Triage Panel' : 'Good morning, Serena — Accounts Overview'}
       </h1>
       <div className="flex items-center gap-2">
         <span className="bg-indigo-50 text-indigo-700 rounded-full px-3 py-1 text-sm font-medium">
