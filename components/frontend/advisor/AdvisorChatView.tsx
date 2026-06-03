@@ -658,7 +658,7 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
             )
             setIsLoading(false)
           }
-        }, 15000)
+        }, 60000)
         
         await streamAdvisorChat(
           {
