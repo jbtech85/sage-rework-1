@@ -92,12 +92,12 @@ export default function IRMApp() {
 
           {/* Right: User indicator + Settings */}
           <div className="flex items-center gap-3">
-            {/* Dani Sanchez indicator */}
+            {/* Serena Ribeiro indicator */}
             <div className="flex items-center gap-2 bg-indigo-50 rounded-xl px-3 py-1.5">
               <div className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">
                 DS
               </div>
-              <span className="text-sm font-medium text-indigo-700">Dani Sanchez</span>
+              <span className="text-sm font-medium text-indigo-700">Serena Ribeiro</span>
               <span className="text-xs bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5">IRM</span>
             </div>
 
