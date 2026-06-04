@@ -1371,25 +1371,7 @@ async def _query_sage_kb_mcp(
 async def advisor_chat(request: AdvisorChatRequest):
     """Non-streaming advisor chat with real LLM and enriched context."""
     try:
-        if not request.skip_mcp:
-            try:
-                mcp_result = await _query_sage_kb_mcp(
-                    message=request.message,
-                    advisor_id=request.advisor_id,
-                    context=request.context,
-                    history=request.history,
-                )
-                print(f"Advisor chat MCP success: latency={mcp_result.get('latency_ms', -1)}ms")
-                return {
-                    "response": mcp_result["response"],
-                    "citations": mcp_result.get("citations", []),
-                }
-            except MCPQueryError as mcp_error:
-                print(f"Advisor chat MCP fallback: reason={mcp_error.reason}")
-        else:
-            print("Advisor chat: skip_mcp=true, using AI agent directly")
-
-        # Check if agent is available for fallback
+        # Check if agent is available
         if not AGENT_AVAILABLE:
             raise HTTPException(
                 status_code=503,
@@ -1415,37 +1397,6 @@ async def advisor_chat(request: AdvisorChatRequest):
 async def advisor_chat_stream(request: AdvisorChatRequest):
     """Streaming advisor chat — sends SSE events with type 'content' and 'complete'."""
     try:
-        if not request.skip_mcp:
-            try:
-                mcp_result = await _query_sage_kb_mcp(
-                    message=request.message,
-                    advisor_id=request.advisor_id,
-                    context=request.context,
-                    history=request.history,
-                )
-                print(f"Advisor chat stream MCP success: latency={mcp_result.get('latency_ms', -1)}ms")
-
-                async def generate_mcp():
-                    response_text = mcp_result["response"]
-                    citations = mcp_result.get("citations", [])
-                    chunk_size = 240
-                    for idx in range(0, len(response_text), chunk_size):
-                        chunk = response_text[idx:idx + chunk_size]
-                        if chunk:
-                            yield f"data: {json.dumps({'type': 'content', 'data': chunk})}\n\n"
-                            await asyncio.sleep(0)
-                    yield f"data: {json.dumps({'type': 'complete', 'data': {'response': response_text, 'citations': citations}})}\n\n"
-
-                return StreamingResponse(
-                    generate_mcp(),
-                    media_type="text/event-stream",
-                    headers={"Cache-Control": "no-cache", "Connection": "keep-alive"},
-                )
-            except MCPQueryError as mcp_error:
-                print(f"Advisor chat stream MCP fallback: reason={mcp_error.reason}")
-        else:
-            print("Advisor chat stream: skip_mcp=true, using AI agent directly")
-
         # Check if agent is available for fallback
         if not AGENT_AVAILABLE:
             raise HTTPException(
