@@ -3,12 +3,16 @@
 import { useEffect, useRef } from "react"
 
 interface VegaChartProps {
-  spec: object
+  spec: Record<string, any>
   className?: string
 }
 
 export const VegaChart: React.FC<VegaChartProps> = ({ spec, className }) => {
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Extract title so we can render it with CSS wrapping instead of Vega's truncation
+  const title = typeof spec.title === "string" ? spec.title : undefined
+  const specWithoutTitle = title ? { ...spec, title: undefined } : spec
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -17,9 +21,8 @@ export const VegaChart: React.FC<VegaChartProps> = ({ spec, className }) => {
     const render = async () => {
       try {
         const vegaEmbed = (await import("vega-embed")).default
-        const result = await vegaEmbed(containerRef.current!, spec, {
+        const result = await vegaEmbed(containerRef.current!, specWithoutTitle, {
           actions: false,
-          theme: "ggplot2",
           config: {
             background: "transparent",
             view: { stroke: "transparent" },
@@ -49,10 +52,11 @@ export const VegaChart: React.FC<VegaChartProps> = ({ spec, className }) => {
   }, [spec])
 
   return (
-    <div
-      ref={containerRef}
-      className={className}
-      style={{ width: "100%", height: 300 }}
-    />
+    <div className={className}>
+      {title && (
+        <p className="text-sm font-semibold text-gray-800 mb-2 leading-snug">{title}</p>
+      )}
+      <div ref={containerRef} style={{ width: "100%", height: 280 }} />
+    </div>
   )
 }
