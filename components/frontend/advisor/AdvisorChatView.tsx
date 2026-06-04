@@ -296,10 +296,13 @@ function parseResponseSections(content: string): ParsedSection[] {
 
 function extractVegaSpecs(content: string): { text: string; specs: object[] } {
   const specs: object[] = []
-  const text = content.replace(/```vega-lite\n([\s\S]*?)```/g, (_, json) => {
+  let text = content.replace(/```vega-lite\n([\s\S]*?)```/g, (_, json) => {
     try { specs.push(JSON.parse(json.trim())) } catch {}
     return ""
   })
+  // Hide any unclosed vega-lite block still being streamed
+  const openBlock = text.indexOf("```vega-lite")
+  if (openBlock !== -1) text = text.slice(0, openBlock)
   return { text: text.trim(), specs }
 }
 

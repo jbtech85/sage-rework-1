@@ -395,83 +395,64 @@ async def evaluate_agent_run(thread_id: str, run_id: str) -> Optional[Dict[str, 
     return {"error": "Evaluations not available"}
 
 
-def _run_agent_stream(input_messages: list, previous_response_id: str | None) -> tuple[list, str | None]:
-    """
-    Run one turn of the agent stream synchronously.
-    Returns (list of SSE event dicts, response_id).
-    Tool call events are included so the caller can execute them and loop.
-    """
-    create_kwargs = dict(
-        input=input_messages,
-        stream=True,
-        extra_body={"agent_reference": {"name": agent_name, "type": "agent_reference"}},
-    )
-    if previous_response_id:
-        create_kwargs["previous_response_id"] = previous_response_id
-
-    events = []
-    response_id = None
-    with openai_client.responses.create(**create_kwargs) as stream:
-        for event in stream:
-            event_type = getattr(event, "type", "")
-            if event_type == "response.output_text.delta":
-                delta = getattr(event, "delta", "")
-                events.append({"type": "content", "data": {"content": delta}})
-            elif event_type == "response.output_item.done":
-                item = getattr(event, "item", None)
-                if item and getattr(item, "type", "") == "function_call":
-                    events.append({"type": "_tool_call", "item": item})
-            elif "oauth_consent" in event_type or "consent_request" in event_type:
-                url = getattr(event, "url", None) or getattr(getattr(event, "item", None), "url", None)
-                if url:
-                    events.append({"type": "consent_required", "data": {"url": url}})
-            elif event_type == "response.completed":
-                resp = getattr(event, "response", None)
-                if resp:
-                    response_id = getattr(resp, "id", None)
-    return events, response_id
-
-
-def _build_product_catalogue_context() -> str:
-    """Returns a compact product catalogue string for inclusion in messages."""
-    lines = ["Available insurance products by risk level:"]
-    for risk in ("low", "medium", "high"):
-        data = json.loads(get_product_catalogue(risk))
-        for p in data.get("products", []):
-            name = p.get("name", "")
-            desc = p.get("description", "")
-            if name:
-                lines.append(f"- [{risk.upper()}] {name}: {desc}")
-    return "\n".join(lines)
-
-
 def stream_agent_response(session_id: str, user_message: str):
     """
     Synchronous generator that streams SSE event dicts for a user message.
-    Product catalogue is injected into context rather than called as a tool.
+    Yields content events immediately as they arrive from Foundry (true streaming).
     """
     previous_response_id = conversation_manager.get_previous_response_id(session_id)
-
-    product_keywords = ("product", "coverage", "plan", "policy", "insurance", "recommend", "suggest", "catalogue")
-    include_catalogue = any(kw in user_message.lower() for kw in product_keywords)
-    message_content = user_message
-    if include_catalogue:
-        message_content = f"{user_message}\n\n{_build_product_catalogue_context()}"
-
-    current_input = [{"role": "user", "content": message_content}]
+    current_input = [{"role": "user", "content": user_message}]
 
     yield {"type": "status", "data": {"status": "Thinking..."}}
 
     while True:
-        events, response_id = _run_agent_stream(current_input, previous_response_id)
+        create_kwargs = dict(
+            input=current_input,
+            stream=True,
+            extra_body={"agent_reference": {"name": agent_name, "type": "agent_reference"}},
+        )
+        if previous_response_id:
+            create_kwargs["previous_response_id"] = previous_response_id
 
-        if response_id:
-            conversation_manager.set_last_response_id(session_id, response_id)
-            previous_response_id = response_id
+        response_id = None
+        tool_calls = []
 
-        for e in events:
-            yield e
-        break
+        with openai_client.responses.create(**create_kwargs) as stream:
+            for event in stream:
+                event_type = getattr(event, "type", "")
+                if event_type == "response.output_text.delta":
+                    delta = getattr(event, "delta", "")
+                    yield {"type": "content", "data": {"content": delta}}
+                elif event_type == "response.output_item.done":
+                    item = getattr(event, "item", None)
+                    if item and getattr(item, "type", "") == "function_call":
+                        tool_calls.append(item)
+                elif "oauth_consent" in event_type or "consent_request" in event_type:
+                    url = getattr(event, "url", None) or getattr(getattr(event, "item", None), "url", None)
+                    if url:
+                        yield {"type": "consent_required", "data": {"url": url}}
+                elif event_type == "response.completed":
+                    resp = getattr(event, "response", None)
+                    if resp:
+                        response_id = getattr(resp, "id", None)
+
+        if not tool_calls:
+            break
+
+        # Execute any function tool calls and loop back with outputs
+        tool_outputs = []
+        for tc in tool_calls:
+            name = getattr(tc, "name", "")
+            call_id = getattr(tc, "call_id", getattr(tc, "id", ""))
+            arguments = getattr(tc, "arguments", "{}")
+            if name == "get_product_catalogue":
+                args = json.loads(arguments) if arguments else {}
+                result = get_product_catalogue(args.get("risk", "medium"))
+                tool_outputs.append({"type": "function_call_output", "call_id": call_id, "output": result})
+
+        if not tool_outputs:
+            break
+        current_input = tool_outputs
 
 # FastAPI app
 app = FastAPI(title="Insurance Underwriting API", version="1.0.0")
