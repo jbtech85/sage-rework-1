@@ -78,9 +78,9 @@ const GENERIC_PROMPTS: QuickQuery[] = [
 ]
 
 const DEMO_PROMPTS: QuickQuery[] = [
-  { id: "market-context", label: "Market Context: Contoso Capital", icon: <TrendingUp className="w-4 h-4" />, prompt: "What's the market context relevant to Contoso Capital's mandate given today's energy shock?", category: "client" },
-  { id: "exposure", label: "Exposure & IC Positioning", icon: <Target className="w-4 h-4" />, prompt: "Show me Contoso's exposure sensitivity and the IC's current positioning on rates and credit.", category: "client" },
-  { id: "compliance", label: "Communications Guardrails", icon: <Shield className="w-4 h-4" />, prompt: "What are my communications guardrails for this conversation?", category: "client" },
+  { id: "market-context", label: "What's the market context relevant to Contoso Capital's mandate given today's energy shock?", icon: <TrendingUp className="w-4 h-4" />, prompt: "What's the market context relevant to Contoso Capital's mandate given today's energy shock?", category: "client" },
+  { id: "exposure", label: "Show me Contoso's exposure sensitivity and the IC's current positioning on rates and credit.", icon: <Target className="w-4 h-4" />, prompt: "Show me Contoso's exposure sensitivity and the IC's current positioning on rates and credit.", category: "client" },
+  { id: "compliance", label: "What are my communications guardrails for this conversation?", icon: <Shield className="w-4 h-4" />, prompt: "What are my communications guardrails for this conversation?", category: "client" },
 ]
 
 // ─── Mock Responses ─────────────────────────────────────────────────────────
