@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useEffect, useCallback } from "react"
+import React, { useState, useRef, useEffect, useCallback, Suspense, lazy } from "react"
 import {
   Send,
   Loader2,
@@ -28,6 +28,17 @@ import {
   getApiMode,
   type ConversationSummary,
 } from "@/lib/api"
+
+// ─── Vega-Lite chart (lazy-loaded to avoid SSR issues) ──────────────────────
+
+const VegaChartComponent = lazy(() =>
+  import("@/components/frontend/shared/VegaChart").then(m => ({ default: m.VegaChart }))
+)
+const VegaChartLazy: React.FC<{ spec: object }> = ({ spec }) => (
+  <Suspense fallback={<div className="h-[300px] bg-gray-50 rounded-lg animate-pulse" />}>
+    <VegaChartComponent spec={spec} />
+  </Suspense>
+)
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -278,11 +289,21 @@ function parseResponseSections(content: string): ParsedSection[] {
 
 // ─── Response Card Component ────────────────────────────────────────────────
 
+function extractVegaSpecs(content: string): { text: string; specs: object[] } {
+  const specs: object[] = []
+  const text = content.replace(/```vega-lite\n([\s\S]*?)```/g, (_, json) => {
+    try { specs.push(JSON.parse(json.trim())) } catch {}
+    return ""
+  })
+  return { text: text.trim(), specs }
+}
+
 const ResponseCard: React.FC<{ message: ChatMessage }> = ({ message }) => {
   const [copied, setCopied] = useState(false)
+  const { text: cleanContent, specs: vegaSpecs } = extractVegaSpecs(message.content)
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(message.content.replace(/\[REF:[a-zA-Z0-9_-]+\]/g, ''))
+    navigator.clipboard.writeText(cleanContent.replace(/\[REF:[a-zA-Z0-9_-]+\]/g, ''))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -290,7 +311,7 @@ const ResponseCard: React.FC<{ message: ChatMessage }> = ({ message }) => {
   const citationMap = new Map<string, number>()
   if (message.citations) message.citations.forEach((c, i) => { if (c.id) citationMap.set(c.id, i + 1) })
 
-  const sections = parseResponseSections(message.content)
+  const sections = parseResponseSections(cleanContent)
   const hasStructure = sections.some(s => s.type === "heading" || s.type === "keyvalue")
 
   // Simple text reply — no card header
@@ -315,6 +336,13 @@ const ResponseCard: React.FC<{ message: ChatMessage }> = ({ message }) => {
                 return null
               })}
             </div>
+            {vegaSpecs.length > 0 && (
+              <div className="px-5 pb-4 space-y-4 border-t border-gray-50 pt-4">
+                {vegaSpecs.map((spec, i) => (
+                  <VegaChartLazy key={i} spec={spec} />
+                ))}
+              </div>
+            )}
             <CitationFooter citations={message.citations} />
           </div>
           <CopyAction copied={copied} onCopy={handleCopy} />
@@ -415,6 +443,13 @@ const ResponseCard: React.FC<{ message: ChatMessage }> = ({ message }) => {
             </div>
           )}
           <div className="px-5 py-4 space-y-3">{bodyParts}</div>
+          {vegaSpecs.length > 0 && (
+            <div className="px-5 pb-4 space-y-4 border-t border-gray-100 pt-4">
+              {vegaSpecs.map((spec, i) => (
+                <VegaChartLazy key={i} spec={spec} />
+              ))}
+            </div>
+          )}
           <CitationFooter citations={message.citations} />
         </div>
         <CopyAction copied={copied} onCopy={handleCopy} />
