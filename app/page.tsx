@@ -224,6 +224,7 @@ export default function IRMApp() {
                 clients={getMockClientsForAdvisor(MOCK_ADVISOR.id)}
                 isMockMode={isMockMode}
                 embedded
+                scene={scene}
               />
             </div>
           </div>

@@ -14,6 +14,7 @@ import {
   Plus,
   Trash2,
   TrendingUp,
+  Calendar,
 } from "lucide-react"
 import type { AdvisorProfile, ClientProfile } from "@/lib/types"
 import { Card } from "@/components/frontend/shared/UIComponents"
@@ -47,6 +48,7 @@ interface AdvisorChatViewProps {
   clients: ClientProfile[]
   isMockMode?: boolean
   embedded?: boolean
+  scene?: string
 }
 
 interface ChatMessage {
@@ -68,14 +70,17 @@ interface QuickQuery {
 
 // ─── Quick Queries ──────────────────────────────────────────────────────────
 
-const QUICK_QUERIES: QuickQuery[] = [
-  {
-    id: "market-context",
-    label: "Market Context: Contoso Capital",
-    icon: <TrendingUp className="w-4 h-4" />,
-    prompt: "What's the market context relevant to Contoso Capital's mandate given today's energy shock?",
-    category: "client",
-  },
+const ACCOUNT_SCENES = ['account-detail', 'market-context', 'exposure', 'compliance', 'call-active', 'call-next-steps']
+
+const GENERIC_PROMPTS: QuickQuery[] = [
+  { id: "agenda", label: "Today's Agenda", icon: <Calendar className="w-4 h-4" />, prompt: "What's on my agenda today?", category: "client" },
+  { id: "priority", label: "Priority Accounts", icon: <Target className="w-4 h-4" />, prompt: "Summarize my highest priority accounts.", category: "client" },
+]
+
+const DEMO_PROMPTS: QuickQuery[] = [
+  { id: "market-context", label: "Market Context: Contoso Capital", icon: <TrendingUp className="w-4 h-4" />, prompt: "What's the market context relevant to Contoso Capital's mandate given today's energy shock?", category: "client" },
+  { id: "exposure", label: "Exposure & IC Positioning", icon: <Target className="w-4 h-4" />, prompt: "Show me Contoso's exposure sensitivity and the IC's current positioning on rates and credit.", category: "client" },
+  { id: "compliance", label: "Communications Guardrails", icon: <Shield className="w-4 h-4" />, prompt: "What are my communications guardrails for this conversation?", category: "client" },
 ]
 
 // ─── Mock Responses ─────────────────────────────────────────────────────────
@@ -497,11 +502,16 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
   clients,
   isMockMode = true,
   embedded = false,
+  scene,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<"all" | "regulatory" | "client" | "planning">("all")
+  const isAccountScene = ACCOUNT_SCENES.includes(scene ?? '')
+  const assistantCount = messages.filter(m => m.role === 'assistant' && m.content).length
+  const activePrompts = isAccountScene
+    ? (assistantCount < DEMO_PROMPTS.length ? [DEMO_PROMPTS[assistantCount]] : [])
+    : GENERIC_PROMPTS
   const [showHistory, setShowHistory] = useState(false)
   const [conversationList, setConversationList] = useState<ConversationSummary[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
@@ -604,7 +614,8 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
     
     if (isMockMode) {
       setTimeout(() => {
-        const matchedQuery = QUICK_QUERIES.find(q => 
+        const allPrompts = [...GENERIC_PROMPTS, ...DEMO_PROMPTS]
+        const matchedQuery = allPrompts.find((q: QuickQuery) =>
           content.toLowerCase().includes(q.label.toLowerCase()) ||
           q.prompt.toLowerCase() === content.toLowerCase()
         )
@@ -700,9 +711,6 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend() }
   }
   
-  const filteredQueries = selectedCategory === "all"
-    ? QUICK_QUERIES
-    : QUICK_QUERIES.filter(q => q.category === selectedCategory)
   
   return (
     <div className="h-full flex flex-col bg-gray-50">
@@ -823,37 +831,16 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
                 <Sparkles className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">How can I help you today?</h2>
-              <p className="text-gray-500">Ask about regulations, client strategies, or planning scenarios</p>
+              <p className="text-gray-500">Select a prompt or type your question below</p>
             </div>
-            
-            <div className="flex justify-center gap-2 mb-4">
-              {[
-                { id: "all", label: "All" },
-                { id: "regulatory", label: "Regulatory" },
-                { id: "planning", label: "Planning" },
-              ].map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id as typeof selectedCategory)}
-                  className={`px-3 py-1.5 text-sm rounded-full transition-colors ${
-                    selectedCategory === cat.id
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              {filteredQueries.map(query => (
+            <div className="flex flex-col gap-3">
+              {activePrompts.map((query: QuickQuery) => (
                 <button
                   key={query.id}
                   onClick={() => handleQuickQuery(query)}
-                  className="flex items-center gap-3 p-4 bg-white border rounded-xl hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors text-left"
+                  className="flex items-center gap-3 p-4 bg-white border rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 transition-colors text-left w-full"
                 >
-                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
+                  <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 flex-shrink-0">
                     {query.icon}
                   </div>
                   <span className="text-sm font-medium text-gray-700">{query.label}</span>
@@ -884,6 +871,22 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
                     <span className="text-sm">Analyzing...</span>
                   </div>
                 </div>
+              </div>
+            )}
+            {!isLoading && isAccountScene && activePrompts.length > 0 && messages.length > 0 && (
+              <div className="mt-2 mb-4">
+                <button
+                  onClick={() => handleQuickQuery(activePrompts[0])}
+                  className="flex items-center gap-3 p-4 bg-white border border-indigo-200 rounded-xl hover:bg-indigo-50/50 transition-colors text-left w-full"
+                >
+                  <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 flex-shrink-0">
+                    {activePrompts[0].icon}
+                  </div>
+                  <div>
+                    <p className="text-xs text-indigo-500 font-medium mb-0.5">Suggested next</p>
+                    <p className="text-sm font-medium text-gray-700">{activePrompts[0].label}</p>
+                  </div>
+                </button>
               </div>
             )}
             <div ref={messagesEndRef} />
