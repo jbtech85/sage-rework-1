@@ -150,14 +150,14 @@ export function OrchestrationView({
           <span className="text-sm text-gray-700">{selectedAccount.outreach.proposedTime}</span>
         </div>
         {isApproved ? (
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-green-600" />
-              <StatusBadge status={selectedAccount.outreach.status} />
+              <span className="text-xs font-medium text-green-700">✓ Confirmed</span>
             </div>
             <button
               onClick={() => onSceneChange('call-active')}
-              className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg px-3 py-1.5 transition-colors"
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg px-3 py-1.5 transition-colors"
             >
               <Phone className="w-3 h-3" />
               Connect
