@@ -225,6 +225,7 @@ export default function IRMApp() {
                 isMockMode={isMockMode}
                 embedded
                 scene={scene}
+                callSegmentIndex={callSegmentIndex}
               />
             </div>
           </div>

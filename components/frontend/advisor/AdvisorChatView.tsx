@@ -29,6 +29,7 @@ import {
   getApiMode,
   type ConversationSummary,
 } from "@/lib/api"
+import { CALL_SEGMENTS } from "@/lib/irmData"
 
 // ─── Vega-Lite chart (lazy-loaded to avoid SSR issues) ──────────────────────
 
@@ -49,6 +50,7 @@ interface AdvisorChatViewProps {
   isMockMode?: boolean
   embedded?: boolean
   scene?: string
+  callSegmentIndex?: number
 }
 
 interface ChatMessage {
@@ -506,6 +508,7 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
   isMockMode = true,
   embedded = false,
   scene,
+  callSegmentIndex,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState("")
@@ -529,6 +532,23 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
   }
   
   useEffect(() => { scrollToBottom() }, [messages])
+
+  // Inject static call-phase response when segment advances
+  useEffect(() => {
+    const isCallScene = scene === 'call-active' || scene === 'call-next-steps'
+    if (!isCallScene || callSegmentIndex === undefined) return
+    const segment = CALL_SEGMENTS[callSegmentIndex]
+    if (!segment) return
+    const { headline, bullets, approvedFraming } = segment.agentIntel
+    const lines = [`**${headline}**`, '', ...bullets.map(b => `- ${b}`)]
+    if (approvedFraming) lines.push('', `> ${approvedFraming}`)
+    const content = lines.join('\n')
+    msgCounter.current += 1
+    setMessages(prev => [
+      ...prev,
+      { id: `call-${callSegmentIndex}-${msgCounter.current}`, role: 'assistant', content, timestamp: new Date().toISOString() }
+    ])
+  }, [callSegmentIndex, scene])
 
   // ── Conversation history ──
 

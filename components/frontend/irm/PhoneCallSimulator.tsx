@@ -40,7 +40,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
         }
       `}</style>
       <div
-        className="fixed bottom-6 right-6 z-50 w-80 rounded-2xl overflow-hidden border border-gray-700 shadow-2xl shadow-[0_0_40px_rgba(99,102,241,0.25)]"
+        className="fixed bottom-6 left-6 z-50 w-80 rounded-2xl overflow-hidden border border-gray-700 shadow-2xl shadow-[0_0_40px_rgba(99,102,241,0.25)]"
       >
         {/* SECTION 1 — HEADER BAR */}
         <div className="bg-gray-900 px-4 py-3 flex items-center justify-between">
