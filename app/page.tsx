@@ -13,7 +13,7 @@ import { AdvisorChatView } from "@/components/frontend/advisor/AdvisorChatView"
 
 export default function IRMApp() {
   const [scene, setScene] = useState<IRMScene>('dashboard')
-  const [callSegmentIndex, setCallSegmentIndex] = useState(0)
+  const [callSegmentIndex, setCallSegmentIndex] = useState(-1)
   const [showSettings, setShowSettings] = useState(false)
   const [isMockMode, setIsMockMode] = useState(false)
   const [swaUser, setSwaUser] = useState<{ name: string; email: string } | null>(null)
@@ -48,13 +48,13 @@ export default function IRMApp() {
   }, [])
 
   const handleCallNext = () => {
-    if (callSegmentIndex < 4) {
-      const next = callSegmentIndex + 1
+    const next = callSegmentIndex + 1
+    if (next < 5) {
       setCallSegmentIndex(next)
       if (next === 4) setScene('call-next-steps')
     } else {
       setScene('cowork')
-      setCallSegmentIndex(0)
+      setCallSegmentIndex(-1)
     }
   }
 
@@ -67,7 +67,7 @@ export default function IRMApp() {
 
   const handleCallEnd = () => {
     setScene('cowork')
-    setCallSegmentIndex(0)
+    setCallSegmentIndex(-1)
   }
 
   const dashboardScenes: IRMScene[] = ['dashboard', 'alert-expanded', 'triage', 'outreach']

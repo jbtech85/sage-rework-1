@@ -536,7 +536,7 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
   // Inject static call-phase response when segment advances
   useEffect(() => {
     const isCallScene = scene === 'call-active' || scene === 'call-next-steps'
-    if (!isCallScene || callSegmentIndex === undefined) return
+    if (!isCallScene || callSegmentIndex === undefined || callSegmentIndex < 0) return
     const segment = CALL_SEGMENTS[callSegmentIndex]
     if (!segment) return
     const { headline, bullets, approvedFraming } = segment.agentIntel

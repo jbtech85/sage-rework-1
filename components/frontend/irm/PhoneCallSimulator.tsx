@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Phone, PhoneOff, ChevronLeft, ChevronRight } from 'lucide-react'
 import { CALL_SEGMENTS } from '@/lib/irmData'
 
@@ -14,10 +14,27 @@ interface PhoneCallSimulatorProps {
 
 export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev, onEnd }: PhoneCallSimulatorProps) {
   const [seconds, setSeconds] = useState(0)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
   useEffect(() => {
     const timer = setInterval(() => setSeconds(s => s + 1), 1000)
     return () => clearInterval(timer)
   }, [])
+
+  // Play audio when segment advances
+  useEffect(() => {
+    if (callSegmentIndex < 0) return
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    const audio = new Audio(`/audio/marcus-${callSegmentIndex}.mp3`)
+    audioRef.current = audio
+    audio.play().catch(() => {})
+    return () => {
+      audio.pause()
+    }
+  }, [callSegmentIndex])
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60)
@@ -27,7 +44,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
 
   if (!isVisible) return null
 
-  const segment = CALL_SEGMENTS[callSegmentIndex]
+  const segment = callSegmentIndex >= 0 ? CALL_SEGMENTS[callSegmentIndex] : null
   const total = CALL_SEGMENTS.length
   const heights = ['8px', '14px', '10px', '16px', '8px']
 
@@ -39,10 +56,8 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
           50% { transform: scaleY(1.4); opacity: 1; }
         }
       `}</style>
-      <div
-        className="fixed bottom-6 left-6 z-50 w-80 rounded-2xl overflow-hidden border border-gray-700 shadow-2xl shadow-[0_0_40px_rgba(99,102,241,0.25)]"
-      >
-        {/* SECTION 1 — HEADER BAR */}
+      <div className="fixed bottom-6 left-6 z-50 w-80 rounded-2xl overflow-hidden border border-gray-700 shadow-2xl shadow-[0_0_40px_rgba(99,102,241,0.25)]">
+        {/* Header */}
         <div className="bg-gray-900 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse mr-2" />
@@ -59,7 +74,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
           </button>
         </div>
 
-        {/* SECTION 2 — CALLER INFO */}
+        {/* Caller info */}
         <div className="bg-gray-900 px-4 pb-4 border-b border-gray-700">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
@@ -76,8 +91,9 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
                   className="w-1 rounded-full bg-green-400"
                   style={{
                     height: h,
-                    animation: 'waveform 1.2s ease-in-out infinite',
+                    animation: callSegmentIndex >= 0 ? 'waveform 1.2s ease-in-out infinite' : 'none',
                     animationDelay: i * 0.15 + 's',
+                    opacity: callSegmentIndex >= 0 ? 1 : 0.3,
                   }}
                 />
               ))}
@@ -85,34 +101,37 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
           </div>
         </div>
 
-        {/* SECTION 3 — SEGMENT INDICATOR */}
-        <div className="bg-gray-800 px-4 py-3">
-          <div className="flex items-center">
-            <span className="text-gray-500 text-xs uppercase tracking-wide">Response</span>
-            <span className="flex-1" />
-            <span className="text-white text-sm font-medium">{callSegmentIndex + 1} / {total}</span>
+        {/* Segment content — hidden until first Next press */}
+        {segment ? (
+          <>
+            <div className="bg-gray-800 px-4 py-3">
+              <div className="flex items-center">
+                <span className="text-gray-500 text-xs uppercase tracking-wide">Response</span>
+                <span className="flex-1" />
+                <span className="text-white text-sm font-medium">{callSegmentIndex + 1} / {total}</span>
+              </div>
+              <div className="text-indigo-300 text-sm mt-1">{segment.label}</div>
+              <div className="flex gap-1.5 mt-2">
+                {Array.from({ length: total }).map((_, i) => (
+                  <div key={i} className={`w-1.5 h-1.5 rounded-full ${i <= callSegmentIndex ? 'bg-indigo-400' : 'bg-gray-600'}`} />
+                ))}
+              </div>
+            </div>
+            <div className="bg-gray-900 px-4 py-4">
+              <div className="text-gray-500 text-xs uppercase tracking-wide mb-2">Client</div>
+              <div className="text-gray-300 text-sm italic leading-relaxed">{segment.clientStatement}</div>
+            </div>
+          </>
+        ) : (
+          <div className="bg-gray-900 px-4 py-4 text-center">
+            <div className="text-gray-500 text-sm">Press Next when ready for Marcus's first response</div>
           </div>
-          <div className="text-indigo-300 text-sm mt-1">{segment.label}</div>
-          <div className="flex gap-1.5 mt-2">
-            {Array.from({ length: total }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full ${i <= callSegmentIndex ? 'bg-indigo-400' : 'bg-gray-600'}`}
-              />
-            ))}
-          </div>
-        </div>
+        )}
 
-        {/* SECTION 4 — CLIENT STATEMENT */}
-        <div className="bg-gray-900 px-4 py-4">
-          <div className="text-gray-500 text-xs uppercase tracking-wide mb-2">Client</div>
-          <div className="text-gray-300 text-sm italic leading-relaxed">{segment.clientStatement}</div>
-        </div>
-
-        {/* SECTION 5 — NAVIGATION BUTTONS */}
+        {/* Navigation */}
         <div className="bg-gray-800 px-4 py-3 flex gap-2">
           <button
-            disabled={callSegmentIndex === 0}
+            disabled={callSegmentIndex <= 0}
             onClick={onPrev}
             className="flex-1 py-2 px-3 rounded-xl text-sm font-medium bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
           >
