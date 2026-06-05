@@ -361,7 +361,8 @@ export function OrchestrationView({
 
         {/* Call active / next steps */}
         {(scene === 'call-active' || scene === 'call-next-steps') && (() => {
-          const seg = CALL_SEGMENTS[callSegmentIndex]
+          const seg = callSegmentIndex >= 0 ? CALL_SEGMENTS[callSegmentIndex] : null
+          if (!seg) return <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 text-sm text-gray-500 text-center">Call connected — press Next on the call widget when ready</div>
           const intel = seg.agentIntel
           return (
             <>
