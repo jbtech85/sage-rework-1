@@ -210,6 +210,12 @@ export default function IRMApp() {
             <div className="bg-indigo-900 text-white px-4 py-3 flex items-center gap-2 flex-shrink-0">
               <Leaf className="w-4 h-4 text-indigo-300" />
               <span className="text-sm font-semibold">Woodgrove AI</span>
+              {(scene === 'call-active' || scene === 'call-next-steps') && (
+                <div className="flex items-center gap-1.5 ml-2">
+                  <span className="animate-pulse w-2 h-2 rounded-full bg-green-400 inline-block" />
+                  <span className="text-xs font-medium text-green-300">Live Call Assist</span>
+                </div>
+              )}
               <button
                 onClick={() => setIsChatPaneOpen(false)}
                 className="ml-auto text-indigo-300 hover:text-white transition-colors"
