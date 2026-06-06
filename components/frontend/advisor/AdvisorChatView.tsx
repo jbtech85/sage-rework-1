@@ -559,11 +559,16 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
   
   useEffect(() => { scrollToBottom() }, [messages])
 
-  // Inject static call-phase response when segment advances
+  // Inject call-phase intel: segment 0 on Connect (index=-1), segments 1+ on Next
   useEffect(() => {
     const isCallScene = scene === 'call-active' || scene === 'call-next-steps'
-    if (!isCallScene || callSegmentIndex === undefined || callSegmentIndex < 0) return
-    const segment = CALL_SEGMENTS[callSegmentIndex]
+    if (!isCallScene || callSegmentIndex === undefined) return
+    // callSegmentIndex=-1 means Connect was just clicked → inject segment 0
+    // callSegmentIndex=0 means first Next was pressed → audio only, skip
+    // callSegmentIndex>0 means subsequent Next → inject that segment
+    const segmentIndex = callSegmentIndex === -1 ? 0 : callSegmentIndex > 0 ? callSegmentIndex : null
+    if (segmentIndex === null) return
+    const segment = CALL_SEGMENTS[segmentIndex]
     if (!segment) return
     const { headline, bullets, approvedFraming } = segment.agentIntel
     const lines = [`**${headline}**`, '', ...bullets.map(b => `- ${b}`)]
@@ -572,7 +577,7 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
     msgCounter.current += 1
     setMessages(prev => [
       ...prev,
-      { id: `call-${callSegmentIndex}-${msgCounter.current}`, role: 'assistant', content, timestamp: new Date().toISOString() }
+      { id: `call-${segmentIndex}-${msgCounter.current}`, role: 'assistant', content, timestamp: new Date().toISOString() }
     ])
   }, [callSegmentIndex, scene])
 

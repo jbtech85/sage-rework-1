@@ -91,8 +91,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
                   className="w-1 rounded-full bg-green-400"
                   style={{
                     height: h,
-                    animation: callSegmentIndex >= 0 ? 'waveform 1.2s ease-in-out infinite' : 'none',
-                    animationDelay: i * 0.15 + 's',
+                    animation: callSegmentIndex >= 0 ? `waveform 1.2s ease-in-out ${i * 0.15}s infinite` : 'none',
                     opacity: callSegmentIndex >= 0 ? 1 : 0.3,
                   }}
                 />

@@ -53,7 +53,7 @@ export default function IRMApp() {
       setCallSegmentIndex(next)
       if (next === 4) setScene('call-next-steps')
     } else {
-      setScene('cowork')
+      setScene('account-detail')
       setCallSegmentIndex(-1)
     }
   }
@@ -66,7 +66,7 @@ export default function IRMApp() {
   }
 
   const handleCallEnd = () => {
-    setScene('cowork')
+    setScene('account-detail')
     setCallSegmentIndex(-1)
   }
 
@@ -189,7 +189,6 @@ export default function IRMApp() {
               onApprove={(id) => setApprovedIds(prev => new Set([...prev, id]))}
               onSceneChange={setScene}
               onBack={() => setScene('triage')}
-              callSegmentIndex={callSegmentIndex}
             />
           )}
           {coworkScenes.includes(scene) && (
@@ -210,19 +209,21 @@ export default function IRMApp() {
             <div className="bg-indigo-900 text-white px-4 py-3 flex items-center gap-2 flex-shrink-0">
               <Leaf className="w-4 h-4 text-indigo-300" />
               <span className="text-sm font-semibold">Woodgrove AI</span>
-              {(scene === 'call-active' || scene === 'call-next-steps') && (
-                <div className="flex items-center gap-1.5 ml-2">
-                  <span className="animate-pulse w-2 h-2 rounded-full bg-green-400 inline-block" />
-                  <span className="text-xs font-medium text-green-300">Live Call Assist</span>
-                </div>
-              )}
-              <button
-                onClick={() => setIsChatPaneOpen(false)}
-                className="ml-auto text-indigo-300 hover:text-white transition-colors"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div className="ml-auto flex items-center gap-3">
+                {(scene === 'call-active' || scene === 'call-next-steps') && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="animate-pulse w-2 h-2 rounded-full bg-green-400 inline-block" />
+                    <span className="text-sm font-medium text-green-300">Live Call Assist</span>
+                  </div>
+                )}
+                <button
+                  onClick={() => setIsChatPaneOpen(false)}
+                  className="text-indigo-300 hover:text-white transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
             <div className="flex-1 overflow-hidden">
               <AdvisorChatView
