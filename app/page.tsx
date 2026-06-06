@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Leaf, Settings, WifiOff, Wifi, LogOut, User, X } from "lucide-react"
 import type { IRMScene } from "@/lib/irmTypes"
 import { IRMDashboard } from "@/components/frontend/irm/IRMDashboard"
+import { MarcusDashboard } from "@/components/frontend/marcus/MarcusDashboard"
 import { OrchestrationView } from "@/components/frontend/irm/OrchestrationView"
 import { PhoneCallSimulator } from "@/components/frontend/irm/PhoneCallSimulator"
 import { CoworkPanel } from "@/components/frontend/irm/CoworkPanel"
@@ -12,6 +13,7 @@ import { SageFloatingButton } from "@/components/frontend/shared/SageChatPane"
 import { AdvisorChatView } from "@/components/frontend/advisor/AdvisorChatView"
 
 export default function IRMApp() {
+  const [persona, setPersona] = useState<'serena' | 'marcus'>('serena')
   const [scene, setScene] = useState<IRMScene>('dashboard')
   const [callSegmentIndex, setCallSegmentIndex] = useState(-1)
   const [showSettings, setShowSettings] = useState(false)
@@ -92,13 +94,17 @@ export default function IRMApp() {
 
           {/* Right: User indicator + Settings */}
           <div className="flex items-center gap-3">
-            {/* Serena Ribeiro indicator */}
+            {/* Active persona indicator */}
             <div className="flex items-center gap-2 bg-indigo-50 rounded-xl px-3 py-1.5">
               <div className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">
-                SR
+                {persona === 'serena' ? 'SR' : 'MC'}
               </div>
-              <span className="text-sm font-medium text-indigo-700">Serena Ribeiro</span>
-              <span className="text-xs bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5">IRM</span>
+              <span className="text-sm font-medium text-indigo-700">
+                {persona === 'serena' ? 'Serena Ribeiro' : 'Marcus Chen'}
+              </span>
+              <span className="text-xs bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5">
+                {persona === 'serena' ? 'IRM' : 'CIO'}
+              </span>
             </div>
 
             {/* Settings dropdown */}
@@ -129,6 +135,33 @@ export default function IRMApp() {
                         </div>
                       </div>
                     )}
+
+                    {/* Persona switcher */}
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-xs text-gray-500 font-medium mb-2">Switch Persona</p>
+                      <div className="flex gap-2">
+                        {([
+                          { id: 'serena', name: 'Serena Ribeiro', initials: 'SR', role: 'IRM' },
+                          { id: 'marcus', name: 'Marcus Chen', initials: 'MC', role: 'CIO' },
+                        ] as const).map(p => (
+                          <button
+                            key={p.id}
+                            onClick={() => { setPersona(p.id); setShowSettings(false) }}
+                            className={`flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-lg border transition-colors text-center ${
+                              persona === p.id
+                                ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                                : 'bg-gray-50 border-gray-100 text-gray-600 hover:bg-gray-100'
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-full text-white text-xs font-bold flex items-center justify-center ${persona === p.id ? 'bg-indigo-600' : 'bg-gray-400'}`}>
+                              {p.initials}
+                            </div>
+                            <span className="text-xs font-medium leading-tight">{p.name}</span>
+                            <span className="text-[10px] opacity-60">{p.role}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
 
                     {/* API Mode */}
                     <div className="px-4 py-3 border-b border-gray-100">
@@ -172,7 +205,8 @@ export default function IRMApp() {
       {/* Main Content + Agent Sidebar */}
       <div className="flex-1 flex overflow-hidden">
         <main className="flex-1 overflow-hidden">
-          {dashboardScenes.includes(scene) && (
+          {persona === 'marcus' && <MarcusDashboard />}
+          {persona === 'serena' && dashboardScenes.includes(scene) && (
             <IRMDashboard
               scene={scene}
               onSceneChange={setScene}
@@ -181,7 +215,7 @@ export default function IRMApp() {
               onSelectAccount={(id) => setActiveAccountId(id)}
             />
           )}
-          {accountScenes.includes(scene) && (
+          {persona === 'serena' && accountScenes.includes(scene) && (
             <OrchestrationView
               scene={scene}
               initialAccountId={activeAccountId}
@@ -191,7 +225,7 @@ export default function IRMApp() {
               onBack={() => setScene('triage')}
             />
           )}
-          {coworkScenes.includes(scene) && (
+          {persona === 'serena' && coworkScenes.includes(scene) && (
             <CoworkPanel
               scene={scene}
               onSceneChange={setScene}
