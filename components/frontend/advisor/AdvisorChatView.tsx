@@ -296,6 +296,15 @@ function parseResponseSections(content: string): ParsedSection[] {
 
 // ─── Response Card Component ────────────────────────────────────────────────
 
+function extractApprovedFraming(content: string): { text: string; framing: string | null } {
+  let framing: string | null = null
+  const text = content.replace(/```approved-framing\n([\s\S]*?)```/g, (_, body) => {
+    framing = body.trim()
+    return ""
+  })
+  return { text: text.trim(), framing }
+}
+
 function extractVegaSpecs(content: string): { text: string; specs: object[] } {
   const specs: object[] = []
   let text = content.replace(/```vega-lite\n([\s\S]*?)```/g, (_, json) => {
@@ -310,7 +319,8 @@ function extractVegaSpecs(content: string): { text: string; specs: object[] } {
 
 const ResponseCard: React.FC<{ message: ChatMessage }> = ({ message }) => {
   const [copied, setCopied] = useState(false)
-  const { text: cleanContent, specs: vegaSpecs } = extractVegaSpecs(message.content)
+  const { text: afterFraming, framing } = extractApprovedFraming(message.content)
+  const { text: cleanContent, specs: vegaSpecs } = extractVegaSpecs(afterFraming)
 
   const handleCopy = () => {
     navigator.clipboard.writeText(cleanContent.replace(/\[REF:[a-zA-Z0-9_-]+\]/g, ''))
@@ -346,6 +356,14 @@ const ResponseCard: React.FC<{ message: ChatMessage }> = ({ message }) => {
                 return null
               })}
             </div>
+            {framing && (
+              <div className="px-5 pb-4 pt-4 border-t border-gray-50">
+                <div className="bg-green-50 border-l-4 border-green-500 rounded-r-lg p-4">
+                  <p className="text-xs text-green-600 uppercase font-medium mb-1">Approved Framing</p>
+                  <p className="italic text-green-800 text-sm">{framing}</p>
+                </div>
+              </div>
+            )}
             {vegaSpecs.length > 0 && (
               <div className="px-5 pb-4 space-y-4 border-t border-gray-50 pt-4">
                 {vegaSpecs.map((spec, i) => (
@@ -453,6 +471,14 @@ const ResponseCard: React.FC<{ message: ChatMessage }> = ({ message }) => {
             </div>
           )}
           <div className="px-5 py-4 space-y-3">{bodyParts}</div>
+          {framing && (
+            <div className="px-5 pb-4 pt-4 border-t border-gray-100">
+              <div className="bg-green-50 border-l-4 border-green-500 rounded-r-lg p-4">
+                <p className="text-xs text-green-600 uppercase font-medium mb-1">Approved Framing</p>
+                <p className="italic text-green-800 text-sm">{framing}</p>
+              </div>
+            </div>
+          )}
           {vegaSpecs.length > 0 && (
             <div className="px-5 pb-4 space-y-4 border-t border-gray-100 pt-4">
               {vegaSpecs.map((spec, i) => (
@@ -541,7 +567,7 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
     if (!segment) return
     const { headline, bullets, approvedFraming } = segment.agentIntel
     const lines = [`**${headline}**`, '', ...bullets.map(b => `- ${b}`)]
-    if (approvedFraming) lines.push('', `> ${approvedFraming}`)
+    if (approvedFraming) lines.push('', '```approved-framing', approvedFraming, '```')
     const content = lines.join('\n')
     msgCounter.current += 1
     setMessages(prev => [
