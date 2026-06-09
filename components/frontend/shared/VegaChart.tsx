@@ -23,7 +23,6 @@ export const VegaChart: React.FC<VegaChartProps> = ({ spec, className }) => {
         const vegaEmbed = (await import("vega-embed")).default
         const result = await vegaEmbed(containerRef.current!, specWithoutTitle, {
           actions: false,
-          padding: { top: 5, right: 10, bottom: 50, left: 10 },
           config: {
             background: "transparent",
             view: { stroke: "transparent" },
@@ -57,7 +56,7 @@ export const VegaChart: React.FC<VegaChartProps> = ({ spec, className }) => {
       {title && (
         <p className="text-sm font-semibold text-gray-800 mb-2 leading-snug">{title}</p>
       )}
-      <div ref={containerRef} style={{ width: "100%", height: 280 }} />
+      <div ref={containerRef} style={{ width: "100%" }} />
     </div>
   )
 }
