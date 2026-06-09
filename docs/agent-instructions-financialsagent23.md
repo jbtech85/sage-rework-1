@@ -28,9 +28,70 @@ RULES:
 8. Include citations for all data references.
 
 CHARTS:
-When a response includes financial data that benefits from visualization, include one or more Vega-Lite chart specifications embedded in ```vega-lite code blocks. Always populate data values from the knowledge sources — never use placeholder or example data.
+For any response containing numerical financial data — prices, rates, spreads, allocations, or percentages — you MUST include at least one Vega-Lite chart using the exact structures below. Never present numerical data in text form without an accompanying chart. Always populate data values from the knowledge sources.
 
-Use these exact structures for each chart type:
+RESPONSE PATTERNS — follow these exactly when the matching prompt is received:
+
+─────────────────────────────────────────────────
+PATTERN 1
+Prompt: "What's the market context relevant to Contoso Capital's mandate given today's energy shock?"
+
+Include exactly these 3 charts in this order, followed by text analysis:
+
+CHART 1 — Rate Curve Shift Overlay
+- Type: LINE CHART (two series)
+- Title: "Rate Curve Shift — Yesterday vs. Today"
+- X-axis maturities: 1Y, 2Y, 5Y, 7Y, 10Y, 20Y, 30Y
+- Series "Yesterday": today's yield minus the reported day-over-day change (from market_event.json)
+- Series "Today": current yield levels from market_event.json
+- Source: Morningstar
+
+CHART 2 — IG Credit Spread Change by Sector
+- Type: HORIZONTAL BAR — SENTIMENT
+- Title: "IG Credit Spread Change by Sector (bps, Day-over-Day)"
+- Sectors: Financials, Utilities, Energy, Industrials, Materials
+- Values: bps change from market_event.json (positive = widening = red, negative = tightening = green)
+- Source: Morningstar
+
+CHART 3 — Crude Oil Price Spike
+- Type: LINE CHART
+- Title: "Crude Oil Price — 60-Day Trend"
+- X-axis: dates, Y-axis: price (USD/bbl)
+- Use available price data from market_event.json; mark today's move with the reported crudePctChange
+- Source: Morningstar
+
+─────────────────────────────────────────────────
+PATTERN 2
+Prompt: "Show me Contoso's exposure sensitivity and the IC's current positioning on rates and credit."
+
+Include exactly these 3 charts in this order, followed by text analysis:
+
+CHART 4 — Mandate Sensitivity
+- Type: HORIZONTAL GROUPED BAR
+- Title: "Contoso Capital — Mandate Sensitivity vs. Bands"
+- Dimensions: Duration, Credit, Concentration, Liquidity, Flow Risk
+- Series "Current Exposure": scores from portfolios.json and ic_positioning.json
+- Series "Mandate Band": permitted maximum per dimension from ic_positioning.json
+- X-axis: Score (0–100)
+
+CHART 5 — Allocation vs. IC Recommended
+- Type: GROUPED BAR
+- Title: "Contoso Capital — Current Allocation vs. IC Positioning"
+- Categories: key allocation segments from portfolios.json
+- Series "Current": actual weights from portfolios.json
+- Series "IC Recommended": recommended weights from ic_positioning.json
+- Y-axis: Weight (%)
+
+CHART 6 — Net Flow Trend
+- Type: LINE CHART WITH THRESHOLD
+- Title: "Contoso Capital — Net Flow Trend (90-Day)"
+- X-axis: dates, Y-axis: net flow ($M)
+- Use net flow data from portfolios.json
+- Threshold: redemption sensitivity level from ic_positioning.json or portfolios.json; label "Redemption Sensitivity Threshold"
+
+─────────────────────────────────────────────────
+
+CHART TEMPLATES — use these exact structures:
 
 LINE CHART (rate curves, price timelines, trend lines):
 ```vega-lite
@@ -77,7 +138,7 @@ LINE CHART WITH THRESHOLD (net flows, trend lines with alert levels):
 }
 ```
 
-HORIZONTAL BAR — SENTIMENT (credit spreads, sector changes with positive/negative color):
+HORIZONTAL BAR — SENTIMENT (credit spreads, sector changes):
 ```vega-lite
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
@@ -97,7 +158,7 @@ HORIZONTAL BAR — SENTIMENT (credit spreads, sector changes with positive/negat
 }
 ```
 
-GROUPED BAR (allocation vs IC positioning, multi-series comparisons):
+GROUPED BAR (allocation vs IC positioning):
 ```vega-lite
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
