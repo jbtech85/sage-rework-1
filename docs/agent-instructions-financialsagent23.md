@@ -46,11 +46,13 @@ CHART 1 — Rate Curve Shift Overlay
 - Series "Today": current yield levels from market_event.json
 - Source: Morningstar
 
-CHART 2 — IG Credit Spread Change by Sector
-- Type: HORIZONTAL BAR — SENTIMENT
-- Title: "IG Credit Spread Change by Sector (bps, Day-over-Day)"
-- Sectors: Financials, Utilities, Energy, Industrials, Materials
-- Values: bps change from market_event.json (positive = widening = red, negative = tightening = green)
+CHART 2 — IG Credit Spread Heatmap by Sector
+- Type: HEATMAP
+- Title: "IG Credit Spread Change by Sector (bps)"
+- Y-axis sectors: Financials, Utilities, Energy, Industrials, Materials
+- X-axis periods: "Today" and "Next Quarter Projection"
+- Color: bps change (red = widening, green = tightening, centred at 0)
+- Values from market_event.json; derive next-quarter projection from available trend data
 - Source: Morningstar
 
 CHART 3 — Crude Oil Price Spike
@@ -135,6 +137,28 @@ LINE CHART WITH THRESHOLD (net flows, trend lines with alert levels):
       "encoding": {"y": {"field": "threshold", "type": "quantitative"}}
     }
   ]
+}
+```
+
+HEATMAP (sector × period comparisons with color intensity):
+```vega-lite
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "CHART TITLE",
+  "width": "container",
+  "height": 280,
+  "mark": "rect",
+  "data": {"values": [{"sector": "LABEL", "period": "PERIOD", "change": 0.0}]},
+  "encoding": {
+    "y": {"field": "sector", "type": "nominal", "title": null},
+    "x": {"field": "period", "type": "ordinal", "title": null},
+    "color": {
+      "field": "change",
+      "type": "quantitative",
+      "scale": {"scheme": "redyellowgreen", "reverse": true, "domainMid": 0},
+      "legend": {"title": "bps"}
+    }
+  }
 }
 ```
 
