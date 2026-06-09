@@ -8,7 +8,7 @@ import { MarcusDashboard } from "@/components/frontend/marcus/MarcusDashboard"
 import { OrchestrationView } from "@/components/frontend/irm/OrchestrationView"
 import { PhoneCallSimulator } from "@/components/frontend/irm/PhoneCallSimulator"
 import { CoworkPanel } from "@/components/frontend/irm/CoworkPanel"
-import { prefetchWorkIQContext, MOCK_ADVISOR, getMockClientsForAdvisor } from "@/lib/advisorApi"
+import { MOCK_ADVISOR } from "@/lib/advisorApi"
 import { SageFloatingButton } from "@/components/frontend/shared/SageChatPane"
 import { AdvisorChatView } from "@/components/frontend/advisor/AdvisorChatView"
 
@@ -24,8 +24,6 @@ export default function IRMApp() {
   const [activeAccountId, setActiveAccountId] = useState('contoso-capital')
 
   useEffect(() => {
-    prefetchWorkIQContext()
-
     // Fetch signed-in user from Easy Auth (works for App Service and SWA)
     fetch('/.auth/me')
       .then(r => r.json())
@@ -262,7 +260,6 @@ export default function IRMApp() {
             <div className="flex-1 overflow-hidden">
               <AdvisorChatView
                 advisor={MOCK_ADVISOR}
-                clients={getMockClientsForAdvisor(MOCK_ADVISOR.id)}
                 isMockMode={isMockMode}
                 embedded
                 scene={scene}

@@ -16,8 +16,7 @@ import {
   TrendingUp,
   Calendar,
 } from "lucide-react"
-import type { AdvisorProfile, ClientProfile } from "@/lib/types"
-import { Card } from "@/components/frontend/shared/UIComponents"
+import type { AdvisorProfile } from "@/lib/types"
 import { PoweredByLabel } from "@/components/frontend/shared/PoweredByLabel"
 import { streamAdvisorChat } from "@/lib/advisorApi"
 import type { AdvisorChatCitation } from "@/lib/advisorApi"
@@ -46,7 +45,6 @@ const VegaChartLazy: React.FC<{ spec: object }> = ({ spec }) => (
 
 interface AdvisorChatViewProps {
   advisor: AdvisorProfile
-  clients: ClientProfile[]
   isMockMode?: boolean
   embedded?: boolean
   scene?: string
@@ -87,69 +85,6 @@ const DEMO_PROMPTS: QuickQuery[] = [
 
 // ─── Mock Responses ─────────────────────────────────────────────────────────
 
-const MOCK_RESPONSES: Record<string, { content: string; citations?: AdvisorChatCitation[] }> = {
-  "us-auto-minimums": {
-    content: `## US Auto Liability Minimums
-
-### Typical State Minimums
-- **Bodily Injury per Person**: $25,000 [REF:us-minimum-liability-auto]
-- **Bodily Injury per Occurrence**: $50,000 [REF:us-minimum-liability-auto]
-- **Property Damage**: $10,000 [REF:us-minimum-liability-auto]
-
-### When to Recommend Higher Limits
-- Applicants with significant assets at risk from a lawsuit
-- Commercial drivers or high-mileage drivers
-- Any applicant in a high-litigation state
-
-### Underwriter Considerations
-1. **Flag Minimum-Only Coverage**: Escalate applicants carrying only state minimums on high-value risks
-2. **Recommend Umbrella Layering**: Personal umbrella policies start where auto liability ends
-3. **Document Limit Elections**: Record the reason for limit selection in the applicant file`,
-    citations: [
-      { id: "us-minimum-liability-auto", title: "US Minimum Auto Liability Requirements", source: "https://www.iii.org/article/auto-insurance-state-minimums" },
-    ],
-  },
-  "nfip-flood": {
-    content: `## NFIP Mandatory Flood Purchase Requirement
-
-### Coverage Limits
-- **Residential Building**: Up to $250,000 [REF:us-nfip-flood-requirement]
-- **Residential Contents**: Up to $100,000 [REF:us-nfip-flood-requirement]
-- **Commercial Building**: Up to $500,000 [REF:us-nfip-flood-requirement]
-
-### Who Must Purchase
-- Properties in FEMA Special Flood Hazard Areas (SFHA) with federally-backed mortgages
-- Lender must verify flood insurance at origination and each renewal
-
-### Underwriter Considerations
-- Applicants with properties exceeding NFIP limits should be referred to excess flood markets
-- Track FEMA flood zone determinations for all property risks
-- Private flood alternatives may offer broader terms and higher limits`,
-    citations: [
-      { id: "us-nfip-flood-requirement", title: "NFIP Mandatory Flood Purchase Requirement", source: "https://www.fema.gov/flood-insurance/work-with-nfip/mandatory-purchase" },
-    ],
-  },
-  "workers-comp": {
-    content: `## Workers Compensation Employer Obligations
-
-### General Requirement
-- Most US states require coverage for employers with **1 or more employees** [REF:us-workers-comp-requirement]
-- Benefits cover medical expenses and lost wages for work-related injuries
-
-### State Variations
-- Texas allows employers to opt out (non-subscriber status)
-- Some states have monopolistic funds (e.g., Ohio, Wyoming)
-- Benefit duration and amounts vary by state
-
-### Underwriter Considerations
-1. **Verify Payroll Classification**: Ensure job classifications match actual duties
-2. **Experience Modification Factor**: High mod rates indicate elevated risk
-3. **Audit Requirements**: Most policies are subject to premium audit at policy year end`,
-    citations: [
-      { id: "us-workers-comp-requirement", title: "Workers Compensation Employer Obligation", source: "https://www.dol.gov/agencies/owcp/FECA/regs/statutes" },
-    ],
-  },
-}
 
 // ─── Citation Tooltip Component ─────────────────────────────────────────────
 
@@ -530,7 +465,6 @@ const CopyAction: React.FC<{ copied: boolean; onCopy: () => void }> = ({ copied,
 
 export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
   advisor,
-  clients,
   isMockMode = true,
   embedded = false,
   scene,
@@ -668,28 +602,10 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
     
     if (isMockMode) {
       setTimeout(() => {
-        const allPrompts = [...GENERIC_PROMPTS, ...DEMO_PROMPTS]
-        const matchedQuery = allPrompts.find((q: QuickQuery) =>
-          content.toLowerCase().includes(q.label.toLowerCase()) ||
-          q.prompt.toLowerCase() === content.toLowerCase()
-        )
-        
-        const responseData = matchedQuery && MOCK_RESPONSES[matchedQuery.id]
-          ? MOCK_RESPONSES[matchedQuery.id]
-          : {
-              content: `## Analysis: ${content.substring(0, 50)}
-
-### Key Points
-- **Client Context**: Always review the specific client's situation, risk tolerance, and goals
-- **Regulatory Compliance**: Ensure any advice aligns with current US and Canadian regulations
-- **Documentation**: Keep detailed records of recommendations and client decisions
-
-### Recommended Actions
-1. **Review Client Profiles**: Check affected clients in your portfolio
-2. **Verify Compliance**: Cross-reference with current regulatory requirements
-3. **Document Decisions**: Record all recommendations and rationale`,
-              citations: [] as AdvisorChatCitation[],
-            }
+        const responseData = {
+          content: `Switch to Live mode to get real responses from the agent.`,
+          citations: [] as AdvisorChatCitation[],
+        }
         
         setMessages(prev => [...prev, {
           id: assistantMessageId,

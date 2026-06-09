@@ -80,15 +80,6 @@ def load_user_profiles():
       print(f"Error loading user profiles: {e}")
       return []
 
-def load_investment_products():
-  """Load investment products from JSON file"""
-  try:
-      with open(DATA_DIR / "investment_products.json", 'r') as f:
-          return json.load(f)
-  except (FileNotFoundError, json.JSONDecodeError) as e:
-      print(f"Error loading investment products: {e}")
-      return {"low": [], "medium": [], "high": []}
-
 # Pydantic Models
 class UserProfile(BaseModel):
     id: str
@@ -313,42 +304,6 @@ class ProfilesResponse(BaseModel):
 
 # Load data
 SAMPLE_PROFILES = load_user_profiles()
-INVESTMENT_PRODUCTS = load_investment_products()
-
-# Investment product catalogue
-def get_product_catalogue(risk: str = "medium") -> str:
-  """Query investment product catalogue by risk level."""
-  catalogue = INVESTMENT_PRODUCTS.get("products_by_risk", {}).get(risk, INVESTMENT_PRODUCTS.get("products_by_risk", {}).get("medium", []))
-  result = {"products": catalogue}
-  return json.dumps(result)
-
-# System instructions for the AI agent
-SYSTEM_INSTRUCTIONS = """
-You are Woodgrove AI, an AI assistant for insurance underwriters at Woodgrove International.
-You help underwriters prepare for applicant meetings, assess risk profiles, and make informed coverage decisions.
-
-YOUR CAPABILITIES:
-- Work IQ Calendar: access the underwriter's upcoming meetings and appointment details
-- Work IQ Copilot: access emails and files relevant to applicants and cases
-- Insurance product catalogue: fetch available products by risk level via get_product_catalogue
-
-HOW TO RESPOND:
-- Be conversational, concise, and professional
-- Only use tools when they are genuinely relevant to the question
-- Do NOT use the code interpreter unless explicitly asked to perform a calculation
-- Do NOT return JSON schemas, structured analysis outputs, or cashflow tables unprompted
-- When asked about calendar or schedule, use Work IQ Calendar to look up real meeting data
-- When asked about an applicant or case, use Work IQ Copilot to surface relevant emails or documents
-- When asked about insurance products, use get_product_catalogue
-
-MEETING PREPARATION:
-When an underwriter asks about an upcoming meeting or applicant, use Work IQ Calendar to find the meeting,
-then use Work IQ Copilot to find any relevant emails or files. Summarise what you find and suggest
-what the underwriter should know or prepare before the meeting.
-
-TONE:
-You are a knowledgeable colleague, not a form-filling system. Keep responses focused and useful.
-If you cannot find real data via the tools, say so clearly — do not fabricate names, dates, or case details."""
 
 
 
@@ -367,24 +322,6 @@ class ConversationManager:
         self._last_response_ids.pop(session_id, None)
 
 conversation_manager = ConversationManager()
-
-# OpenAI-format function tool definition passed inline to responses.create()
-PRODUCT_CATALOGUE_TOOL = {
-    "type": "function",
-    "name": "get_product_catalogue",
-    "description": "Fetch available insurance products filtered by risk level.",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "risk": {
-                "type": "string",
-                "enum": ["low", "medium", "high"],
-                "description": "Risk level to filter products by",
-            }
-        },
-        "required": [],
-    },
-}
 
 AGENT_AVAILABLE = True
 
@@ -415,7 +352,6 @@ def stream_agent_response(session_id: str, user_message: str):
             create_kwargs["previous_response_id"] = previous_response_id
 
         response_id = None
-        tool_calls = []
 
         with openai_client.responses.create(**create_kwargs) as stream:
             for event in stream:
@@ -423,10 +359,6 @@ def stream_agent_response(session_id: str, user_message: str):
                 if event_type == "response.output_text.delta":
                     delta = getattr(event, "delta", "")
                     yield {"type": "content", "data": {"content": delta}}
-                elif event_type == "response.output_item.done":
-                    item = getattr(event, "item", None)
-                    if item and getattr(item, "type", "") == "function_call":
-                        tool_calls.append(item)
                 elif "oauth_consent" in event_type or "consent_request" in event_type:
                     url = getattr(event, "url", None) or getattr(getattr(event, "item", None), "url", None)
                     if url:
@@ -436,23 +368,7 @@ def stream_agent_response(session_id: str, user_message: str):
                     if resp:
                         response_id = getattr(resp, "id", None)
 
-        if not tool_calls:
-            break
-
-        # Execute any function tool calls and loop back with outputs
-        tool_outputs = []
-        for tc in tool_calls:
-            name = getattr(tc, "name", "")
-            call_id = getattr(tc, "call_id", getattr(tc, "id", ""))
-            arguments = getattr(tc, "arguments", "{}")
-            if name == "get_product_catalogue":
-                args = json.loads(arguments) if arguments else {}
-                result = get_product_catalogue(args.get("risk", "medium"))
-                tool_outputs.append({"type": "function_call_output", "call_id": call_id, "output": result})
-
-        if not tool_outputs:
-            break
-        current_input = tool_outputs
+        break
 
 # FastAPI app
 app = FastAPI(title="Insurance Underwriting API", version="1.0.0")
