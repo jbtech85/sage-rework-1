@@ -876,7 +876,7 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
                 onKeyDown={handleKeyDown}
                 placeholder="Ask about regulations, client strategies, or planning scenarios..."
                 className="w-full px-4 py-3 pr-12 border rounded-xl resize-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-300"
-                rows={1}
+                rows={2}
               />
               <button
                 onClick={() => handleSend()}
