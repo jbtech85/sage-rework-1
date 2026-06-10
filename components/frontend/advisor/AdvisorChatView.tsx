@@ -45,7 +45,6 @@ const VegaChartLazy: React.FC<{ spec: object }> = ({ spec }) => (
 
 interface AdvisorChatViewProps {
   advisor: AdvisorProfile
-  isMockMode?: boolean
   embedded?: boolean
   scene?: string
   callSegmentIndex?: number
@@ -465,7 +464,6 @@ const CopyAction: React.FC<{ copied: boolean; onCopy: () => void }> = ({ copied,
 
 export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
   advisor,
-  isMockMode = true,
   embedded = false,
   scene,
   callSegmentIndex,
@@ -600,78 +598,59 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
     setInputValue("")
     setIsLoading(true)
     
-    if (isMockMode) {
-      setTimeout(() => {
-        const responseData = {
-          content: `Switch to Live mode to get real responses from the agent.`,
-          citations: [] as AdvisorChatCitation[],
-        }
-        
-        setMessages(prev => [...prev, {
-          id: assistantMessageId,
-          role: "assistant",
-          content: responseData.content,
-          timestamp: new Date().toISOString(),
-          citations: responseData.citations,
-        }])
-        setIsLoading(false)
-        setTimeout(() => autoSaveConversation(), 500)
-      }, 1500)
-    } else {
-      let timeoutId: NodeJS.Timeout | null = null
-      let hasResponded = false
-      
-      try {
-        setMessages(prev => [...prev, {
-          id: assistantMessageId,
-          role: "assistant",
-          content: "",
-          timestamp: new Date().toISOString(),
-        }])
-        
-        timeoutId = setTimeout(() => {
-          if (!hasResponded) {
-            setMessages(prev => 
-              prev.map(m => m.id === assistantMessageId ? { ...m, content: "The AI service is taking longer than expected. Please try again or switch to Mock Mode." } : m)
-            )
-            setIsLoading(false)
-          }
-        }, 60000)
-        
-        await streamAdvisorChat(
-          {
-            message: content.trim(),
-            advisor_id: advisor.id,
-            context: { jurisdiction: advisor.jurisdictions?.[0] },
-            history: messages.map(m => ({ role: m.role, content: m.content })),
-          },
-          (streamedContent, isComplete, citations) => {
-            hasResponded = true
-            if (timeoutId) { clearTimeout(timeoutId); timeoutId = null }
-            setMessages(prev => 
-              prev.map(m => 
-                m.id === assistantMessageId 
-                  ? { ...m, content: streamedContent, ...(isComplete && citations ? { citations } : {}) }
-                  : m
-              )
-            )
-            if (isComplete) {
-              setIsLoading(false)
-              setTimeout(() => autoSaveConversation(), 500)
-            }
-          }
-        )
-      } catch (error) {
-        console.error("Chat error:", error)
-        if (timeoutId) clearTimeout(timeoutId)
-        setMessages(prev => 
-          prev.map(m => m.id === assistantMessageId 
-            ? { ...m, content: "I encountered an error connecting to the AI service. Please try again or switch to Mock Mode." }
-            : m
+    let timeoutId: NodeJS.Timeout | null = null
+    let hasResponded = false
+
+    try {
+      setMessages(prev => [...prev, {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "",
+        timestamp: new Date().toISOString(),
+      }])
+
+      timeoutId = setTimeout(() => {
+        if (!hasResponded) {
+          setMessages(prev =>
+            prev.map(m => m.id === assistantMessageId ? { ...m, content: "The AI service is taking longer than expected. Please try again." } : m)
           )
+          setIsLoading(false)
+        }
+      }, 60000)
+
+      await streamAdvisorChat(
+        {
+          message: content.trim(),
+          advisor_id: advisor.id,
+          context: { jurisdiction: advisor.jurisdictions?.[0] },
+          history: messages.map(m => ({ role: m.role, content: m.content })),
+        },
+        (streamedContent, isComplete, citations) => {
+          hasResponded = true
+          if (timeoutId) { clearTimeout(timeoutId); timeoutId = null }
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === assistantMessageId
+                ? { ...m, content: streamedContent, ...(isComplete && citations ? { citations } : {}) }
+                : m
+            )
+          )
+          if (isComplete) {
+            setIsLoading(false)
+            setTimeout(() => autoSaveConversation(), 500)
+          }
+        }
+      )
+    } catch (error) {
+      console.error("Chat error:", error)
+      if (timeoutId) clearTimeout(timeoutId)
+      setMessages(prev =>
+        prev.map(m => m.id === assistantMessageId
+          ? { ...m, content: "I encountered an error connecting to the AI service. Please try again." }
+          : m
         )
-        setIsLoading(false)
-      }
+      )
+      setIsLoading(false)
     }
   }
   
