@@ -66,6 +66,7 @@ export interface AgentIntel {
   headline: string
   bullets: string[]
   approvedFraming?: string
+  quickReplies?: string[]
 }
 
 export interface CallSegment {

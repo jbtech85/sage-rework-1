@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Phone, PhoneOff, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  PhoneOff, ChevronLeft, ChevronRight,
+  MicOff, VideoOff, Monitor, MoreHorizontal,
+} from 'lucide-react'
 import { CALL_SEGMENTS } from '@/lib/irmData'
 
 interface PhoneCallSimulatorProps {
@@ -12,8 +15,20 @@ interface PhoneCallSimulatorProps {
   onEnd: () => void
 }
 
+function TeamsIcon() {
+  return (
+    <div
+      className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
+      style={{ background: '#6264A7', fontFamily: 'Segoe UI, sans-serif' }}
+    >
+      T
+    </div>
+  )
+}
+
 export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev, onEnd }: PhoneCallSimulatorProps) {
   const [seconds, setSeconds] = useState(0)
+  const [imgError, setImgError] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -21,7 +36,6 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
     return () => clearInterval(timer)
   }, [])
 
-  // Play audio when segment advances
   useEffect(() => {
     if (callSegmentIndex < 0) return
     if (audioRef.current) {
@@ -31,9 +45,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
     const audio = new Audio(`/audio/marcus-${callSegmentIndex}.mp3`)
     audioRef.current = audio
     audio.play().catch(() => {})
-    return () => {
-      audio.pause()
-    }
+    return () => { audio.pause() }
   }, [callSegmentIndex])
 
   const formatTime = (s: number) => {
@@ -46,93 +58,130 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
 
   const segment = callSegmentIndex >= 0 ? CALL_SEGMENTS[callSegmentIndex] : null
   const total = CALL_SEGMENTS.length
-  const heights = ['8px', '14px', '10px', '16px', '8px']
 
   return (
-    <>
-      <style>{`
-        @keyframes waveform {
-          0%, 100% { transform: scaleY(0.5); opacity: 0.6; }
-          50% { transform: scaleY(1.4); opacity: 1; }
-        }
-      `}</style>
-      <div className="fixed bottom-6 left-6 z-50 w-80 rounded-2xl overflow-hidden border border-gray-700 shadow-2xl shadow-[0_0_40px_rgba(99,102,241,0.25)]">
-        {/* Header */}
-        <div className="bg-gray-900 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse mr-2" />
-            <span className="text-green-400 text-sm font-medium">Live Call</span>
-            <span className="text-gray-600 mx-1">·</span>
-            <span className="text-white text-sm font-mono">{formatTime(seconds)}</span>
+    <div className="fixed bottom-6 left-6 z-50 w-80 flex flex-col gap-2">
+
+      {/* ── Teams Video Widget ──────────────────────────────────── */}
+      <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#1b1b1b', border: '1px solid rgba(255,255,255,0.08)' }}>
+
+        {/* Header bar */}
+        <div className="flex items-center justify-between px-3 py-2.5" style={{ background: '#2d2d2d' }}>
+          <div className="flex items-center gap-2">
+            <TeamsIcon />
+            <span className="text-white text-xs font-medium">Microsoft Teams</span>
           </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-gray-300 text-xs font-mono tabular-nums">{formatTime(seconds)}</span>
+          </div>
+        </div>
+
+        {/* Video area — 16:9 */}
+        <div className="relative" style={{ background: '#1e1e1e', aspectRatio: '16/9' }}>
+
+          {/* Centered avatar */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+            {!imgError ? (
+              <img
+                src="/contoso_client.jpeg"
+                alt="Marcus Chen"
+                className="w-20 h-20 rounded-full object-cover"
+                style={{ outline: '2px solid rgba(255,255,255,0.12)' }}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div
+                className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold"
+                style={{ background: '#3d3d8f', outline: '2px solid rgba(255,255,255,0.12)' }}
+              >
+                MC
+              </div>
+            )}
+            <div className="flex items-center gap-1.5">
+              <VideoOff className="w-3 h-3 text-gray-500" />
+              <span className="text-gray-500 text-xs">Camera is off</span>
+            </div>
+          </div>
+
+          {/* Name badge — bottom-left overlay */}
+          <div className="absolute bottom-2 left-2">
+            <div className="flex items-center gap-1.5 rounded px-2 py-1" style={{ background: 'rgba(0,0,0,0.6)' }}>
+              <MicOff className="w-3 h-3 text-red-400" />
+              <span className="text-white text-xs font-medium">Marcus Chen</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Call controls bar */}
+        <div className="flex items-center justify-center gap-1.5 px-3 py-3" style={{ background: '#2d2d2d' }}>
+          <button className="p-2 rounded-full transition-colors hover:bg-white/10" title="Mute">
+            <MicOff className="w-4 h-4 text-white" />
+          </button>
+          <button className="p-2 rounded-full transition-colors hover:bg-white/10" title="Camera off">
+            <VideoOff className="w-4 h-4 text-white" />
+          </button>
+          <button className="p-2 rounded-full transition-colors hover:bg-white/10" title="Share screen">
+            <Monitor className="w-4 h-4 text-white" />
+          </button>
+          <button className="p-2 rounded-full transition-colors hover:bg-white/10" title="More options">
+            <MoreHorizontal className="w-4 h-4 text-white" />
+          </button>
+          {/* Leave — functional, icon + label like Teams */}
           <button
             onClick={onEnd}
-            className="text-xs text-red-400 hover:text-red-300 hover:bg-red-900/30 px-2 py-1 rounded-lg transition-colors flex items-center gap-1"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 ml-1 transition-colors text-white text-sm font-medium"
+            style={{ background: '#C4314B' }}
           >
-            <PhoneOff className="w-3 h-3" />
-            End
+            <PhoneOff className="w-4 h-4" />
+            Leave
           </button>
         </div>
+      </div>
 
-        {/* Caller info */}
-        <div className="bg-gray-900 px-4 pb-4 border-b border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-              MC
+      {/* ── Script / Navigation Widget ──────────────────────────── */}
+      <div
+        className="rounded-2xl overflow-hidden shadow-xl flex flex-col"
+        style={{ height: 231, background: '#1b1b1b', border: '1px solid rgba(255,255,255,0.08)' }}
+      >
+        {/* Content area — fills space above nav bar */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {segment ? (
+            <>
+              <div className="px-4 py-3 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-400 text-xs uppercase tracking-wide">{segment.label}</span>
+                  <span className="text-gray-600 text-xs">{callSegmentIndex + 1} / {total}</span>
+                </div>
+                <div className="flex gap-1">
+                  {Array.from({ length: total }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-1 rounded-full flex-1 transition-colors"
+                      style={{ background: i <= callSegmentIndex ? '#6264A7' : 'rgba(255,255,255,0.12)' }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="px-4 py-3 flex-1 overflow-y-auto">
+                <div className="text-gray-500 text-xs uppercase tracking-wide mb-1.5">Client</div>
+                <div className="text-gray-300 text-sm italic leading-relaxed">{segment.clientStatement}</div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center px-4">
+              <div className="text-gray-500 text-sm text-center">Press Next when ready for Marcus's first response</div>
             </div>
-            <div>
-              <div className="text-white font-semibold text-base">Marcus Chen</div>
-              <div className="text-gray-400 text-sm">CIO, Contoso Capital</div>
-            </div>
-            <div className="ml-auto flex items-end gap-0.5 h-6">
-              {heights.map((h, i) => (
-                <div
-                  key={i}
-                  className="w-1 rounded-full bg-green-400"
-                  style={{
-                    height: h,
-                    animation: callSegmentIndex >= 0 ? `waveform 1.2s ease-in-out ${i * 0.15}s infinite` : 'none',
-                    opacity: callSegmentIndex >= 0 ? 1 : 0.3,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Segment content — hidden until first Next press */}
-        {segment ? (
-          <>
-            <div className="bg-gray-800 px-4 py-3">
-              <div className="flex items-center">
-                <span className="text-gray-500 text-xs uppercase tracking-wide">Response</span>
-                <span className="flex-1" />
-                <span className="text-white text-sm font-medium">{callSegmentIndex + 1} / {total}</span>
-              </div>
-              <div className="text-indigo-300 text-sm mt-1">{segment.label}</div>
-              <div className="flex gap-1.5 mt-2">
-                {Array.from({ length: total }).map((_, i) => (
-                  <div key={i} className={`w-1.5 h-1.5 rounded-full ${i <= callSegmentIndex ? 'bg-indigo-400' : 'bg-gray-600'}`} />
-                ))}
-              </div>
-            </div>
-            <div className="bg-gray-900 px-4 py-4">
-              <div className="text-gray-500 text-xs uppercase tracking-wide mb-2">Client</div>
-              <div className="text-gray-300 text-sm italic leading-relaxed">{segment.clientStatement}</div>
-            </div>
-          </>
-        ) : (
-          <div className="bg-gray-900 px-4 py-4 text-center">
-            <div className="text-gray-500 text-sm">Press Next when ready for Marcus's first response</div>
-          </div>
-        )}
-
         {/* Navigation */}
-        <div className="bg-gray-800 px-4 py-3 flex gap-2">
+        <div className="px-4 py-3 flex gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
           <button
             disabled={callSegmentIndex <= 0}
             onClick={onPrev}
-            className="flex-1 py-2 px-3 rounded-xl text-sm font-medium bg-gray-700 hover:bg-gray-600 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1"
+            className="flex-1 py-2 px-3 rounded-xl text-sm font-medium text-white transition-colors flex items-center justify-center gap-1 disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ background: 'rgba(255,255,255,0.1)' }}
           >
             <ChevronLeft className="w-4 h-4" />
             Prev
@@ -140,7 +189,8 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
           {callSegmentIndex < total - 1 ? (
             <button
               onClick={onNext}
-              className="flex-1 py-2 px-3 rounded-xl text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white transition-colors flex items-center justify-center gap-1"
+              className="flex-1 py-2 px-3 rounded-xl text-sm font-medium text-white transition-colors flex items-center justify-center gap-1"
+              style={{ background: '#6264A7' }}
             >
               Next
               <ChevronRight className="w-4 h-4" />
@@ -148,7 +198,8 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
           ) : (
             <button
               onClick={onNext}
-              className="flex-1 py-2 px-3 rounded-xl text-sm font-medium bg-green-600 hover:bg-green-500 text-white transition-colors flex items-center justify-center gap-1"
+              className="flex-1 py-2 px-3 rounded-xl text-sm font-medium text-white transition-colors flex items-center justify-center gap-1"
+              style={{ background: '#107C41' }}
             >
               Wrap Up
               <ChevronRight className="w-4 h-4" />
@@ -156,6 +207,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
           )}
         </div>
       </div>
-    </>
+
+    </div>
   )
 }

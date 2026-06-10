@@ -384,6 +384,11 @@ export const CALL_SEGMENTS: CallSegment[] = [
         'Morningstar: 10Y yield +18bps, 30Y +22bps today',
         'Secondary market liquidity in long-duration IG more episodic — phased execution likely',
       ],
+      quickReplies: [
+        "How does today's long-end repricing affect Contoso's duration band relative to their benchmark?",
+        "What is the IC's current recommendation for managing duration exposure in this rate environment?",
+        "What execution options are available to reduce duration risk within Contoso's mandate?",
+      ],
     },
     complianceStatus: 'clear',
   },

@@ -57,6 +57,7 @@ interface ChatMessage {
   timestamp: string
   citations?: AdvisorChatCitation[]
   relatedClients?: string[]
+  quickReplies?: string[]
 }
 
 interface QuickQuery {
@@ -471,11 +472,15 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const isCallScene = scene === 'call-active' || scene === 'call-next-steps'
   const isAccountScene = ACCOUNT_SCENES.includes(scene ?? '')
   const assistantCount = messages.filter(m => m.role === 'assistant' && m.content).length
-  const activePrompts = isAccountScene
-    ? (assistantCount < DEMO_PROMPTS.length ? [DEMO_PROMPTS[assistantCount]] : [])
-    : GENERIC_PROMPTS
+  const activePrompts = isCallScene
+    ? []
+    : isAccountScene
+      ? (assistantCount < DEMO_PROMPTS.length ? [DEMO_PROMPTS[assistantCount]] : [])
+      : GENERIC_PROMPTS
+  const [dismissedQuickReplies, setDismissedQuickReplies] = useState<Set<string>>(new Set())
   const [showHistory, setShowHistory] = useState(false)
   const [conversationList, setConversationList] = useState<ConversationSummary[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
@@ -509,7 +514,13 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
     msgCounter.current += 1
     setMessages(prev => [
       ...prev,
-      { id: `call-${segmentIndex}-${msgCounter.current}`, role: 'assistant', content, timestamp: new Date().toISOString() }
+      {
+        id: `call-${segmentIndex}-${msgCounter.current}`,
+        role: 'assistant',
+        content,
+        timestamp: new Date().toISOString(),
+        ...(segment.agentIntel.quickReplies ? { quickReplies: segment.agentIntel.quickReplies } : {}),
+      }
     ])
   }, [callSegmentIndex, scene])
 
@@ -810,7 +821,28 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
                   </div>
                 )
               }
-              return <ResponseCard key={message.id} message={message} />
+              const showChips = message.quickReplies && !dismissedQuickReplies.has(message.id) && !isLoading
+              return (
+                <React.Fragment key={message.id}>
+                  <ResponseCard message={message} />
+                  {showChips && (
+                    <div className="flex flex-wrap gap-2 mb-4 ml-1">
+                      {message.quickReplies!.map((reply, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setDismissedQuickReplies(prev => new Set(prev).add(message.id))
+                            handleSend(reply)
+                          }}
+                          className="text-sm text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl px-3 py-1.5 hover:bg-indigo-100 transition-colors text-left"
+                        >
+                          {reply}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </React.Fragment>
+              )
             })}
             {isLoading && (
               <div className="flex justify-start mb-4">
@@ -822,7 +854,7 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
                 </div>
               </div>
             )}
-            {!isLoading && isAccountScene && activePrompts.length > 0 && messages.length > 0 && (
+            {!isLoading && isAccountScene && !isCallScene && activePrompts.length > 0 && messages.length > 0 && (
               <div className="mt-2 mb-4">
                 <button
                   onClick={() => handleQuickQuery(activePrompts[0])}
