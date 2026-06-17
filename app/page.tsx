@@ -84,7 +84,7 @@ export default function IRMApp() {
               <Leaf className="w-5 h-5 text-indigo-400" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg font-semibold text-gray-900 tracking-tight">Woodgrove</h1>
+              <h1 className="text-lg font-semibold text-gray-900 tracking-tight">Woodgrove Financial</h1>
               <p className="text-[11px] text-gray-400 font-medium">Institutional Relationship Manager</p>
             </div>
           </a>

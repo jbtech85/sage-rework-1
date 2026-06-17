@@ -69,8 +69,8 @@ export const ACCOUNTS: IRMAccount[] = [
     },
   },
   {
-    id: 'bellows-insurance',
-    name: 'Bellows Insurance Group',
+    id: 'baldwin-insurance',
+    name: 'Baldwin Insurance',
     tier: 2,
     aumBillions: 0.79,
     segment: 'North America',
@@ -79,7 +79,7 @@ export const ACCOUNTS: IRMAccount[] = [
     impactSeverity: 'moderate',
     impactReasons: ['IG credit exposure widening'],
     contact: {
-      name: 'James Bellows',
+      name: 'James Baldwin',
       title: 'CRO',
       preferredChannel: 'email',
     },
@@ -170,8 +170,8 @@ export const ACCOUNTS: IRMAccount[] = [
     },
   },
   {
-    id: 'meridian-state',
-    name: 'Meridian State Fund',
+    id: 'lucerne-state',
+    name: 'Lucerne State Fund',
     tier: 2,
     aumBillions: 0.55,
     segment: 'North America',
@@ -210,8 +210,8 @@ export const ACCOUNTS: IRMAccount[] = [
     },
   },
   {
-    id: 'prospect-treasury',
-    name: 'Prospect City Treasury',
+    id: 'southbridge-treasury',
+    name: 'Southbridge City Treasury',
     tier: 3,
     aumBillions: 0.33,
     segment: 'North America',
@@ -288,8 +288,8 @@ const FABRIKAM_DETAIL: AccountDetail = {
 }
 
 const BELLOWS_DETAIL: AccountDetail = {
-  id: 'bellows-insurance',
-  name: 'Bellows Insurance Group',
+  id: 'baldwin-insurance',
+  name: 'Baldwin Insurance',
   tier: 2,
   aumBillions: 0.79,
   segment: 'North America',
@@ -347,7 +347,7 @@ const ADATUM_DETAIL: AccountDetail = {
 export const ACCOUNT_DETAILS: Record<string, AccountDetail> = {
   'contoso-capital': CONTOSO_DETAIL,
   'fabrikam-pension': FABRIKAM_DETAIL,
-  'bellows-insurance': BELLOWS_DETAIL,
+  'baldwin-insurance': BELLOWS_DETAIL,
   'northwind-asset': NORTHWIND_DETAIL,
   'adatum-treasury': ADATUM_DETAIL,
 }
@@ -435,7 +435,7 @@ export const CALL_SEGMENTS: CallSegment[] = [
       'Perfect. Send those scenarios before our renewal meeting and please loop in our consultant.',
     agentIntel: {
       type: 'next-steps',
-      headline: 'Next Steps Captured',
+      headline: 'Next steps captured',
       bullets: [
         'Model two duration adjustment scenarios (within mandate guidelines)',
         'Review IG financials concentration against IC recommendation',

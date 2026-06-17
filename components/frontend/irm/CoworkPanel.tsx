@@ -225,7 +225,7 @@ Serena`)
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-gray-900">Bellows Insurance Group</span>
+                  <span className="font-medium text-gray-900">Baldwin Insurance</span>
                   <span className="bg-amber-50 text-amber-700 border border-amber-200 text-sm rounded-full px-3 py-0.5">
                     Scheduled — 2 PM call
                   </span>

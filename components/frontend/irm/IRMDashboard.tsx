@@ -20,6 +20,91 @@ import {
   Users,
 } from 'lucide-react'
 
+// ── Bloomberg-style market data widget ────────────────────────────────────────
+
+const MARKET_SECTIONS = [
+  {
+    label: 'ENERGY',
+    rows: [
+      { ticker: 'WTI CRUDE', last: '91.76',  chg: '+7.04',   pct: '+8.30%',  color: '#4ade80' },
+      { ticker: 'BRENT',     last: '94.23',  chg: '+6.89',   pct: '+7.91%',  color: '#4ade80' },
+      { ticker: 'NAT GAS',   last: '3.264',  chg: '+0.19',   pct: '+6.08%',  color: '#4ade80' },
+    ],
+  },
+  {
+    label: 'RATES',
+    rows: [
+      { ticker: '10Y UST', last: '4.874%', chg: '+18bps', pct: '', color: '#fbbf24' },
+      { ticker: '30Y UST', last: '5.118%', chg: '+22bps', pct: '', color: '#fbbf24' },
+      { ticker: '2Y UST',  last: '5.031%', chg:  '+8bps', pct: '', color: '#fbbf24' },
+    ],
+  },
+  {
+    label: 'CREDIT',
+    rows: [
+      { ticker: 'IG OAS',  last: '142',  chg: '+18bps', pct: '', color: '#f87171' },
+      { ticker: 'HY OAS',  last: '412',  chg: '+31bps', pct: '', color: '#f87171' },
+      { ticker: 'CDX IG',  last: '82.1', chg: '+12bps', pct: '', color: '#f87171' },
+    ],
+  },
+  {
+    label: 'EQUITIES',
+    rows: [
+      { ticker: 'S&P 500', last: '4,223',  chg: '-33.8', pct: '-0.79%', color: '#f87171' },
+      { ticker: 'DJIA',    last: '33,082', chg: '-198',  pct: '-0.60%', color: '#f87171' },
+      { ticker: 'NASDAQ',  last: '13,156', chg: '-161',  pct: '-1.21%', color: '#f87171' },
+    ],
+  },
+] as const
+
+function MarketDataWidget() {
+  return (
+    <div className="rounded-xl mb-4 overflow-hidden" style={{ background: '#0d0d0d', border: '1px solid #252525' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-2" style={{ background: '#111', borderBottom: '1px solid #252525' }}>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-bold tracking-widest" style={{ color: '#f97316' }}>MARKET PULSE</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-xs font-medium text-green-400">LIVE</span>
+          </div>
+        </div>
+        <span className="text-xs" style={{ color: '#555', fontVariantNumeric: 'tabular-nums' }}>As of 9:15 AM EST · Jun 12, 2025</span>
+      </div>
+
+      {/* Data columns */}
+      <div className="grid grid-cols-4">
+        {MARKET_SECTIONS.map((section, si) => (
+          <div
+            key={section.label}
+            className="px-4 py-3 flex flex-col"
+            style={{ borderRight: si < 3 ? '1px solid #1e1e1e' : undefined }}
+          >
+            {/* Section label */}
+            <div className="text-[10px] font-bold tracking-widest mb-2.5" style={{ color: '#f97316' }}>
+              {section.label}
+            </div>
+            {/* Rows */}
+            <div className="flex flex-col gap-3">
+              {section.rows.map(row => (
+                <div key={row.ticker} className="flex items-start justify-between gap-2">
+                  <span className="text-[10px] font-medium leading-tight" style={{ color: '#888' }}>{row.ticker}</span>
+                  <div className="text-right shrink-0">
+                    <div className="text-xs font-mono font-semibold text-white leading-tight">{row.last}</div>
+                    <div className="text-[10px] font-mono leading-tight" style={{ color: row.color }}>
+                      {row.pct || row.chg}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 interface IRMDashboardProps {
   scene: IRMScene
   onSceneChange: (scene: IRMScene) => void
@@ -292,9 +377,9 @@ function daysFromNow(days: number): string {
 
 const UPCOMING_REVIEWS = [
   { name: 'Contoso Capital',       days: 20 },
-  { name: 'Pinnacle State Pension', days: 18 },
-  { name: 'Vantage Capital Group',  days: 15 },
-  { name: 'Apex Municipal Fund',    days: 7  },
+  { name: 'Parnell Pension',        days: 18 },
+  { name: 'Terra Capital Group',    days: 15 },
+  { name: 'Reskit Municipal Fund',  days: 7  },
 ]
 
 function RelationshipsAndReviews() {
@@ -546,6 +631,8 @@ function SceneDashboard({
           50%       { color: rgb(220, 38, 38); }
         }
       `}</style>
+
+      <MarketDataWidget />
 
       {/* Alert banner */}
       <div className="bg-amber-50 border border-amber-200 rounded-xl mb-4 overflow-hidden">
