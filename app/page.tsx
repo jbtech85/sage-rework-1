@@ -94,7 +94,7 @@ export default function IRMApp() {
             {/* Active persona indicator */}
             <div className="flex items-center gap-2 bg-indigo-50 rounded-xl px-3 py-1.5">
               <div className="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">
-                {persona === 'serena' ? 'SR' : 'MC'}
+                {persona === 'serena' ? 'SR' : 'TB'}
               </div>
               <span className="text-sm font-medium text-indigo-700">
                 {persona === 'serena' ? 'Serena Ribeiro' : 'Tim de Boer'}
