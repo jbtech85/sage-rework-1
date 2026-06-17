@@ -69,8 +69,8 @@ export const ACCOUNTS: IRMAccount[] = [
     },
   },
   {
-    id: 'baldwin-insurance',
-    name: 'Baldwin Insurance',
+    id: 'bellows-insurance',
+    name: 'Bellows Insurance',
     tier: 2,
     aumBillions: 0.79,
     segment: 'North America',
@@ -79,7 +79,7 @@ export const ACCOUNTS: IRMAccount[] = [
     impactSeverity: 'moderate',
     impactReasons: ['IG credit exposure widening'],
     contact: {
-      name: 'James Baldwin',
+      name: 'James Bellows',
       title: 'CRO',
       preferredChannel: 'email',
     },
@@ -130,8 +130,8 @@ export const ACCOUNTS: IRMAccount[] = [
   },
   // Unaffected accounts
   {
-    id: 'contoso-pension',
-    name: 'Contoso Pension Trust',
+    id: 'zava-pension',
+    name: 'Zava Pension Trust',
     tier: 2,
     aumBillions: 0.87,
     segment: 'North America',
@@ -190,8 +190,8 @@ export const ACCOUNTS: IRMAccount[] = [
     },
   },
   {
-    id: 'oakwood-endowment',
-    name: 'Oakwood Endowment',
+    id: 'proseware-investments',
+    name: 'Proseware Investments',
     tier: 2,
     aumBillions: 0.44,
     segment: 'North America',
@@ -210,8 +210,8 @@ export const ACCOUNTS: IRMAccount[] = [
     },
   },
   {
-    id: 'southbridge-treasury',
-    name: 'Southbridge City Treasury',
+    id: 'southridge-partners',
+    name: 'Southridge Partners',
     tier: 3,
     aumBillions: 0.33,
     segment: 'North America',
@@ -288,8 +288,8 @@ const FABRIKAM_DETAIL: AccountDetail = {
 }
 
 const BELLOWS_DETAIL: AccountDetail = {
-  id: 'baldwin-insurance',
-  name: 'Baldwin Insurance',
+  id: 'bellows-insurance',
+  name: 'Bellows Insurance',
   tier: 2,
   aumBillions: 0.79,
   segment: 'North America',
@@ -347,7 +347,7 @@ const ADATUM_DETAIL: AccountDetail = {
 export const ACCOUNT_DETAILS: Record<string, AccountDetail> = {
   'contoso-capital': CONTOSO_DETAIL,
   'fabrikam-pension': FABRIKAM_DETAIL,
-  'baldwin-insurance': BELLOWS_DETAIL,
+  'bellows-insurance': BELLOWS_DETAIL,
   'northwind-asset': NORTHWIND_DETAIL,
   'adatum-treasury': ADATUM_DETAIL,
 }

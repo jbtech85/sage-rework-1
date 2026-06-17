@@ -15,7 +15,6 @@ import {
   Mail,
   BarChart2,
   Smartphone,
-  ChevronRight,
   Landmark,
   Users,
 } from 'lucide-react'
@@ -377,7 +376,7 @@ function daysFromNow(days: number): string {
 
 const UPCOMING_REVIEWS = [
   { name: 'Contoso Capital',       days: 20 },
-  { name: 'Parnell Pension',        days: 18 },
+  { name: 'Tailwind Traders',       days: 18 },
   { name: 'Terra Capital Group',    days: 15 },
   { name: 'Reskit Municipal Fund',  days: 7  },
 ]
