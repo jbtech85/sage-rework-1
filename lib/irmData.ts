@@ -39,7 +39,7 @@ export const ACCOUNTS: IRMAccount[] = [
       'Renewal in 30 days',
     ],
     contact: {
-      name: 'Marcus Chen',
+      name: 'Tim de Boer',
       title: 'CIO',
       preferredChannel: 'video',
     },

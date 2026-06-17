@@ -63,7 +63,7 @@ function MetricCard({ title, value, detail, icon: Icon, iconBg, iconColor, value
 
 // ── Main dashboard ─────────────────────────────────────────────────────────────
 
-export function MarcusDashboard() {
+export function ClientDashboard() {
   const detail = CONTOSO_DETAIL
 
   return (
@@ -73,7 +73,7 @@ export function MarcusDashboard() {
         {/* Greeting */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Good morning, Marcus</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Good morning, Tim</h1>
             <p className="text-sm text-gray-500 mt-0.5">Contoso Capital · Custom LDI Blend · ${detail.aumBillions.toFixed(2)}B AUM</p>
           </div>
           <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ export function MarcusDashboard() {
           />
         </div>
 
-        {/* Market alert — framed for Marcus */}
+        {/* Market alert — framed for Tim */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl mb-4 overflow-hidden">
           <div className="p-4 flex items-start gap-3">
             <AlertTriangle

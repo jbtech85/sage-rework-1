@@ -598,7 +598,7 @@ export function AccountDetailView({
       return (
         <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-3">
           <span className="animate-pulse w-3 h-3 rounded-full bg-green-500 inline-block flex-shrink-0" />
-          <span className="text-sm font-medium text-green-700">Live call with Marcus Chen (CIO)</span>
+          <span className="text-sm font-medium text-green-700">Live call with Tim de Boer (CIO)</span>
         </div>
       )
     }

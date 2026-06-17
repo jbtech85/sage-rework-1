@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Leaf, Settings, LogOut, User, X } from "lucide-react"
 import type { IRMScene } from "@/lib/irmTypes"
 import { IRMDashboard } from "@/components/frontend/irm/IRMDashboard"
-import { MarcusDashboard } from "@/components/frontend/marcus/MarcusDashboard"
+import { ClientDashboard } from "@/components/frontend/client/ClientDashboard"
 import { OrchestrationView } from "@/components/frontend/irm/OrchestrationView"
 import { PhoneCallSimulator } from "@/components/frontend/irm/PhoneCallSimulator"
 import { CoworkPanel } from "@/components/frontend/irm/CoworkPanel"
@@ -13,7 +13,7 @@ import { SageFloatingButton } from "@/components/frontend/shared/SageChatPane"
 import { AdvisorChatView } from "@/components/frontend/advisor/AdvisorChatView"
 
 export default function IRMApp() {
-  const [persona, setPersona] = useState<'serena' | 'marcus'>('serena')
+  const [persona, setPersona] = useState<'serena' | 'client'>('serena')
   const [scene, setScene] = useState<IRMScene>('dashboard')
   const [callSegmentIndex, setCallSegmentIndex] = useState(-1)
   const [showSettings, setShowSettings] = useState(false)
@@ -97,7 +97,7 @@ export default function IRMApp() {
                 {persona === 'serena' ? 'SR' : 'MC'}
               </div>
               <span className="text-sm font-medium text-indigo-700">
-                {persona === 'serena' ? 'Serena Ribeiro' : 'Marcus Chen'}
+                {persona === 'serena' ? 'Serena Ribeiro' : 'Tim de Boer'}
               </span>
               <span className="text-xs bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5">
                 {persona === 'serena' ? 'IRM' : 'CIO'}
@@ -139,7 +139,7 @@ export default function IRMApp() {
                       <div className="flex gap-2">
                         {([
                           { id: 'serena', name: 'Serena Ribeiro', initials: 'SR', role: 'IRM' },
-                          { id: 'marcus', name: 'Marcus Chen', initials: 'MC', role: 'CIO' },
+                          { id: 'client', name: 'Tim de Boer', initials: 'TB', role: 'CIO' },
                         ] as const).map(p => (
                           <button
                             key={p.id}
@@ -181,7 +181,7 @@ export default function IRMApp() {
       {/* Main Content + Agent Sidebar */}
       <div className="flex-1 flex overflow-hidden">
         <main className="flex-1 overflow-hidden">
-          {persona === 'marcus' && <MarcusDashboard />}
+          {persona === 'client' && <ClientDashboard />}
           {persona === 'serena' && dashboardScenes.includes(scene) && (
             <IRMDashboard
               scene={scene}

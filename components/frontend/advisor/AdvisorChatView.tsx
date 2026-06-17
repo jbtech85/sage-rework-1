@@ -474,11 +474,13 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
   const [isLoading, setIsLoading] = useState(false)
   const isCallScene = scene === 'call-active' || scene === 'call-next-steps'
   const isAccountScene = ACCOUNT_SCENES.includes(scene ?? '')
-  const assistantCount = messages.filter(m => m.role === 'assistant' && m.content).length
+  const usedDemoCount = messages.filter(m =>
+    m.role === 'user' && DEMO_PROMPTS.some(p => p.prompt === m.content)
+  ).length
   const activePrompts = isCallScene
     ? []
     : isAccountScene
-      ? (assistantCount < DEMO_PROMPTS.length ? [DEMO_PROMPTS[assistantCount]] : [])
+      ? (usedDemoCount < DEMO_PROMPTS.length ? [DEMO_PROMPTS[usedDemoCount]] : [])
       : GENERIC_PROMPTS
   const [dismissedQuickReplies, setDismissedQuickReplies] = useState<Set<string>>(new Set())
   const [showHistory, setShowHistory] = useState(false)

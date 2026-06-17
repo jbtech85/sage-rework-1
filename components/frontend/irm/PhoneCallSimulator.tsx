@@ -42,7 +42,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
       audioRef.current.pause()
       audioRef.current = null
     }
-    const audio = new Audio(`/audio/marcus-${callSegmentIndex}.mp3`)
+    const audio = new Audio(`/audio/client-${callSegmentIndex}.mp3`)
     audioRef.current = audio
     audio.play().catch(() => {})
     return () => { audio.pause() }
@@ -85,7 +85,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
             {!imgError ? (
               <img
                 src="/contoso_client.jpeg"
-                alt="Marcus Chen"
+                alt="Tim de Boer"
                 className="w-20 h-20 rounded-full object-cover"
                 style={{ outline: '2px solid rgba(255,255,255,0.12)' }}
                 onError={() => setImgError(true)}
@@ -108,7 +108,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
           <div className="absolute bottom-2 left-2">
             <div className="flex items-center gap-1.5 rounded px-2 py-1" style={{ background: 'rgba(0,0,0,0.6)' }}>
               <MicOff className="w-3 h-3 text-red-400" />
-              <span className="text-white text-xs font-medium">Marcus Chen</span>
+              <span className="text-white text-xs font-medium">Tim de Boer</span>
             </div>
           </div>
         </div>
@@ -170,7 +170,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center px-4">
-              <div className="text-gray-500 text-sm text-center">Press Next when ready for Marcus's first response</div>
+              <div className="text-gray-500 text-sm text-center">Press Next when ready for Tim's first response</div>
             </div>
           )}
         </div>
