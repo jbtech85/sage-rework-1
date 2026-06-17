@@ -15,16 +15,6 @@ interface PhoneCallSimulatorProps {
   onEnd: () => void
 }
 
-function TeamsIcon() {
-  return (
-    <div
-      className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
-      style={{ background: '#6264A7', fontFamily: 'Segoe UI, sans-serif' }}
-    >
-      T
-    </div>
-  )
-}
 
 export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev, onEnd }: PhoneCallSimulatorProps) {
   const [seconds, setSeconds] = useState(0)
@@ -62,22 +52,10 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
   return (
     <div className="fixed bottom-6 left-6 z-50 w-80 flex flex-col gap-2">
 
-      {/* ── Teams Video Widget ──────────────────────────────────── */}
+      {/* ── ACS Video Widget ───────────────────────────────────── */}
       <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ background: '#1b1b1b', border: '1px solid rgba(255,255,255,0.08)' }}>
 
-        {/* Header bar */}
-        <div className="flex items-center justify-between px-3 py-2.5" style={{ background: '#2d2d2d' }}>
-          <div className="flex items-center gap-2">
-            <TeamsIcon />
-            <span className="text-white text-xs font-medium">Microsoft Teams</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-gray-300 text-xs font-mono tabular-nums">{formatTime(seconds)}</span>
-          </div>
-        </div>
-
-        {/* Video area — 16:9 */}
+        {/* Video area — 16:9, no header bar */}
         <div className="relative" style={{ background: '#1e1e1e', aspectRatio: '16/9' }}>
 
           {/* Centered avatar */}
@@ -95,7 +73,7 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
                 className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold"
                 style={{ background: '#3d3d8f', outline: '2px solid rgba(255,255,255,0.12)' }}
               >
-                MC
+                TC
               </div>
             )}
             <div className="flex items-center gap-1.5">
@@ -106,9 +84,16 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
 
           {/* Name badge — bottom-left overlay */}
           <div className="absolute bottom-2 left-2">
-            <div className="flex items-center gap-1.5 rounded px-2 py-1" style={{ background: 'rgba(0,0,0,0.6)' }}>
-              <MicOff className="w-3 h-3 text-red-400" />
+            <div className="rounded px-2 py-1" style={{ background: 'rgba(0,0,0,0.6)' }}>
               <span className="text-white text-xs font-medium">Tim de Boer</span>
+            </div>
+          </div>
+
+          {/* Timer — top-right overlay */}
+          <div className="absolute top-2 right-2">
+            <div className="flex items-center gap-1.5 rounded px-2 py-1" style={{ background: 'rgba(0,0,0,0.5)' }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-white text-xs font-mono tabular-nums">{formatTime(seconds)}</span>
             </div>
           </div>
         </div>
@@ -127,14 +112,14 @@ export function PhoneCallSimulator({ isVisible, callSegmentIndex, onNext, onPrev
           <button className="p-2 rounded-full transition-colors hover:bg-white/10" title="More options">
             <MoreHorizontal className="w-4 h-4 text-white" />
           </button>
-          {/* Leave — functional, icon + label like Teams */}
+          {/* End call — icon only, ACS compact style */}
           <button
             onClick={onEnd}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-2 ml-1 transition-colors text-white text-sm font-medium"
+            className="p-2.5 rounded-full ml-1 transition-colors hover:opacity-90"
             style={{ background: '#C4314B' }}
+            title="End call"
           >
-            <PhoneOff className="w-4 h-4" />
-            Leave
+            <PhoneOff className="w-4 h-4 text-white" />
           </button>
         </div>
       </div>
