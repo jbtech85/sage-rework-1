@@ -40,6 +40,7 @@ jobs:
         with:
           name: node-app
           path: app.zip
+          retention-days: 1
 
   deploy:
     runs-on: ubuntu-latest
