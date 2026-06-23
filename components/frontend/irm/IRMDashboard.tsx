@@ -6,7 +6,6 @@ import { ACCOUNTS, MARKET_EVENT } from '@/lib/irmData'
 import {
   AlertTriangle,
   TrendingUp,
-  TrendingDown,
   Activity,
   Layers,
   Droplets,
@@ -21,54 +20,56 @@ import {
 
 // ── Bloomberg-style market data widget ────────────────────────────────────────
 
-const MARKET_SECTIONS = [
+const MARKET_SECTIONS = [  
   {
-    label: 'ENERGY',
+    label: 'EQUITIES',
     rows: [
-      { ticker: 'WTI CRUDE', last: '91.76',  chg: '+7.04',   pct: '+8.30%',  color: '#4ade80' },
-      { ticker: 'BRENT',     last: '94.23',  chg: '+6.89',   pct: '+7.91%',  color: '#4ade80' },
-      { ticker: 'NAT GAS',   last: '3.264',  chg: '+0.19',   pct: '+6.08%',  color: '#4ade80' },
+      { ticker: 'S&P 500', last: '4,223',  chg: '-33.8', pct: '-3.54%', color: '#ff3b3b' },
+      { ticker: 'DJIA',    last: '33,082', chg: '-198',  pct: '-2.51%', color: '#ff3b3b' },
+      { ticker: 'NASDAQ',  last: '13,156', chg: '-161',  pct: '-3.25%', color: '#ff3b3b' },
     ],
   },
   {
     label: 'RATES',
     rows: [
-      { ticker: '10Y UST', last: '4.874%', chg: '+18bps', pct: '', color: '#fbbf24' },
-      { ticker: '30Y UST', last: '5.118%', chg: '+22bps', pct: '', color: '#fbbf24' },
-      { ticker: '2Y UST',  last: '5.031%', chg:  '+8bps', pct: '', color: '#fbbf24' },
+      { ticker: '10Y UST', last: '4.874%', chg: '+18bps', pct: '', color: '#ff3b3b' },
+      { ticker: '30Y UST', last: '5.118%', chg: '+22bps', pct: '', color: '#ff3b3b' },
+      { ticker: '2Y UST',  last: '5.031%', chg:  '+8bps', pct: '', color: '#ff3b3b' },
     ],
   },
   {
     label: 'CREDIT',
     rows: [
-      { ticker: 'IG OAS',  last: '142',  chg: '+18bps', pct: '', color: '#f87171' },
-      { ticker: 'HY OAS',  last: '412',  chg: '+31bps', pct: '', color: '#f87171' },
-      { ticker: 'CDX IG',  last: '82.1', chg: '+12bps', pct: '', color: '#f87171' },
+      { ticker: 'IG OAS',  last: '142',  chg: '+18bps', pct: '', color: '#ff3b3b' },
+      { ticker: 'HY OAS',  last: '412',  chg: '+31bps', pct: '', color: '#ff3b3b' },
+      { ticker: 'CDX IG',  last: '82.1', chg: '+12bps', pct: '', color: '#ff3b3b' },
     ],
   },
   {
-    label: 'EQUITIES',
+    label: 'COMMODITIES',
     rows: [
-      { ticker: 'S&P 500', last: '4,223',  chg: '-33.8', pct: '-0.79%', color: '#f87171' },
-      { ticker: 'DJIA',    last: '33,082', chg: '-198',  pct: '-0.60%', color: '#f87171' },
-      { ticker: 'NASDAQ',  last: '13,156', chg: '-161',  pct: '-1.21%', color: '#f87171' },
+      { ticker: 'WTI CRUDE', last: '91.76',  chg: '+7.04',   pct: '+16.20%',  color: '#00cc44' },
+      { ticker: 'BRENT',     last: '94.23',  chg: '+6.89',   pct: '+15.00%',  color: '#00cc44' },
+      { ticker: 'NAT GAS',   last: '3.264',  chg: '+0.19',   pct: '+6.08%',  color: '#00cc44' },
     ],
   },
 ] as const
 
 function MarketDataWidget() {
+  const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+
   return (
     <div className="rounded-xl mb-4 overflow-hidden" style={{ background: '#0d0d0d', border: '1px solid #252525' }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2" style={{ background: '#111', borderBottom: '1px solid #252525' }}>
         <div className="flex items-center gap-3">
-          <span className="text-xs font-bold tracking-widest" style={{ color: '#f97316' }}>MARKET PULSE</span>
+          <span className="text-s font-bold tracking-widest" style={{ color: '#ff9900' }}>MARKET PULSE</span>
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
             <span className="text-xs font-medium text-green-400">LIVE</span>
           </div>
         </div>
-        <span className="text-xs" style={{ color: '#555', fontVariantNumeric: 'tabular-nums' }}>As of 9:15 AM EST · Jun 12, 2025</span>
+        <span className="text-xs" style={{ color: 'rgb(180,180,180)', fontVariantNumeric: 'tabular-nums' }}>9:15 AM EST · {today}</span>
       </div>
 
       {/* Data columns */}
@@ -80,17 +81,17 @@ function MarketDataWidget() {
             style={{ borderRight: si < 3 ? '1px solid #1e1e1e' : undefined }}
           >
             {/* Section label */}
-            <div className="text-[10px] font-bold tracking-widest mb-2.5" style={{ color: '#f97316' }}>
+            <div className="text-[12px] font-bold tracking-widest mb-2.5" style={{ color: '#ff9900' }}>
               {section.label}
             </div>
             {/* Rows */}
             <div className="flex flex-col gap-3">
               {section.rows.map(row => (
                 <div key={row.ticker} className="flex items-start justify-between gap-2">
-                  <span className="text-[10px] font-medium leading-tight" style={{ color: '#888' }}>{row.ticker}</span>
+                  <span className="text-[12px] font-medium leading-tight" style={{ color: 'rgb(180,180,180)' }}>{row.ticker}</span>
                   <div className="text-right shrink-0">
                     <div className="text-xs font-mono font-semibold text-white leading-tight">{row.last}</div>
-                    <div className="text-[10px] font-mono leading-tight" style={{ color: row.color }}>
+                    <div className="text-[12px] font-mono leading-tight" style={{ color: row.color }}>
                       {row.pct || row.chg}
                     </div>
                   </div>
@@ -226,9 +227,9 @@ const tierStats = ([1, 2, 3] as const).map((tier) => {
 const totalAUM = tierStats.reduce((sum, t) => sum + t.aum, 0)
 
 const tierColors: Record<number, { bar: string; label: string; badge: string }> = {
-  1: { bar: 'bg-amber-400',  label: 'text-amber-700',  badge: 'bg-amber-50 border-amber-200 text-amber-700' },
-  2: { bar: 'bg-indigo-500', label: 'text-indigo-700', badge: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
-  3: { bar: 'bg-gray-400',   label: 'text-gray-600',   badge: 'bg-gray-50 border-gray-200 text-gray-600' },
+  1: { bar: 'bg-amber-600',  label: 'text-amber-700',  badge: 'bg-amber-600 border-amber-600 text-white' },
+  2: { bar: 'bg-indigo-500', label: 'text-indigo-700', badge: 'bg-indigo-500 border-indigo-500 text-white' },
+  3: { bar: 'bg-violet-500', label: 'text-violet-700', badge: 'bg-violet-500 border-violet-500 text-white' },
 }
 
 function MetricsRow() {
@@ -269,13 +270,21 @@ function MetricsRow() {
       valueColor: 'text-gray-900',
     },
     {
-      title: 'Avg. YTD Alpha',
-      value: '−5bps',
-      detail: 'Book: +7.5% vs +7.6% benchmark',
-      icon: TrendingDown,
-      iconColor: 'text-red-500',
-      iconBg: 'bg-red-50',
-      valueColor: 'text-red-600',
+      title: 'Net New Assets',
+      value: '+$350M',
+      detail: (
+        <span className="flex gap-1.5 flex-wrap">
+          <span className="text-gray-400">3M</span><span className="text-emerald-600 font-medium">+$50M</span>
+          <span className="text-gray-300 mx-0.5">·</span>
+          <span className="text-gray-400">6M</span><span className="text-emerald-600 font-medium">+$125M</span>
+          <span className="text-gray-300 mx-0.5">·</span>
+          <span className="text-gray-400">12M</span><span className="text-emerald-600 font-medium">+$350M</span>
+        </span>
+      ),
+      icon: TrendingUp,
+      iconColor: 'text-emerald-500',
+      iconBg: 'bg-emerald-50',
+      valueColor: 'text-emerald-600',
     },
   ] as const
 
@@ -323,7 +332,7 @@ function TierKPIBar() {
       <div className="flex items-center gap-4">
         {tierStats.map((t) => (
           <div key={t.tier} className="flex items-center gap-2 flex-1">
-            <span className={`border rounded-full px-2 py-0.5 text-xs font-medium ${tierColors[t.tier].badge}`}>
+            <span className={`border rounded-full px-2 py-0.5 text-sm font-medium ${tierColors[t.tier].badge}`}>
               Tier {t.tier}
             </span>
             <div className="min-w-0">
@@ -405,7 +414,7 @@ function RelationshipsAndReviews() {
                 </div>
 
                 {/* Mandate */}
-                <span className="text-xs text-gray-400 w-28 shrink-0">{account.mandateType}</span>
+                <span className="text-xs text-gray-500 w-28 shrink-0">{account.mandateType}</span>
 
                 {/* AUM */}
                 <span className="text-sm font-medium text-gray-700 w-20 shrink-0">{formatAUM(account.aumBillions)}</span>
@@ -522,20 +531,24 @@ function RateCurveChart() {
 }
 
 function SectorHeatmap() {
-  const sectors = ['Financials','Utilities','Industrials','Healthcare','Technology','Energy','Consumer']
+  const sectors = ['Energy','Financials','Utilities','Industrials','Technology','Consumer','Healthcare']
   const periods = ['1W','1M','3M','QTD']
-  // color intensity per cell [sector][period]: 0=green, 1=amber, 2=red
+  // bps per cell [sector][period]
   const heat = [
-    [1,2,2,2], // Financials
-    [1,1,2,2], // Utilities
-    [0,1,1,1], // Industrials
-    [0,0,0,0], // Healthcare
-    [0,0,0,0], // Technology
-    [0,1,1,1], // Energy
-    [0,0,0,1], // Consumer
+    [18,  8,  7,  8], // Energy
+    [11, 16, 18, 16], // Financials
+    [ 7,  9, 13, 17], // Utilities
+    [ 3,  7,  8,  9], // Industrials
+    [ 2,  3,  3,  4], // Technology
+    [ 4,  4,  4,  7], // Consumer
+    [ 1,  2,  2,  3], // Healthcare
   ]
-  const cellColor = (v: number) =>
-    v === 2 ? 'bg-red-400' : v === 1 ? 'bg-amber-300' : 'bg-green-200'
+  const cellColor = (v: number) => {
+    if (v >= 15) return 'bg-red-400'
+    if (v >= 10) return 'bg-orange-400'
+    if (v >= 5)  return 'bg-yellow-300'
+    return 'bg-green-200'
+  }
 
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-2">
@@ -568,9 +581,10 @@ function SectorHeatmap() {
         </table>
       </div>
       <div className="flex items-center gap-2 text-[9px] text-gray-400">
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-green-200" />Tight</span>
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-amber-300" />Widening</span>
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-red-400" />Significant</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-green-200" />1–5bps</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-yellow-300" />5–10bps</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-orange-400" />10–15bps</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-red-400" />15+bps</span>
       </div>
     </div>
   )
@@ -579,7 +593,7 @@ function SectorHeatmap() {
 function IGSpreadChart() {
   const sectors = [
     { name: 'Financials', bps: 18, color: '#ef4444' },
-    { name: 'Utilities',  bps: 12, color: '#f97316' },
+    { name: 'Utilities',  bps: 12, color: '#ff9900' },
     { name: 'Energy',     bps: 9,  color: '#f59e0b' },
     { name: 'Industrials',bps: 5,  color: '#fbbf24' },
     { name: 'Technology', bps: 2,  color: '#86efac' },
@@ -602,7 +616,7 @@ function IGSpreadChart() {
                 style={{ width: `${(bps / max) * 100}%`, backgroundColor: color }}
               />
             </div>
-            <span className="text-[10px] font-medium text-gray-600 w-8 text-right">+{bps}bp</span>
+            <span className="text-[10px] font-medium text-gray-600 w-8 text-right">+{bps}bps</span>
           </div>
         ))}
       </div>
@@ -881,7 +895,7 @@ function SceneTriage({
                 <TierBadge tier={account.tier} />
               </div>
               <div className="flex items-center justify-between mt-1">
-                <span className="text-xs text-gray-400">{account.mandateType}</span>
+                <span className="text-xs text-gray-500">{account.mandateType}</span>
                 <span className="text-xs text-gray-500">{formatAUM(account.aumBillions)}</span>
               </div>
             </div>
