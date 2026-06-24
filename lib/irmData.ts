@@ -10,7 +10,7 @@ export const AFFECTED_COUNT = 5
 
 export const MARKET_EVENT: MarketEvent = {
   title: 'Energy Supply Shock',
-  crudePctChange: '+16.2%',
+  crudePctChange: '+4.2%',
   cause: 'Middle East supply disruption',
   timestamp: 'Today, 7:42 AM',
   impacts: [

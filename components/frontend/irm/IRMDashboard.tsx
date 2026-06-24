@@ -48,7 +48,7 @@ const MARKET_SECTIONS = [
   {
     label: 'COMMODITIES',
     rows: [
-      { ticker: 'WTI CRUDE', last: '91.76',  chg: '+7.04',   pct: '+16.20%',  color: '#00cc44' },
+      { ticker: 'WTI CRUDE', last: '96.60',  chg: '+3.91',   pct: '+4.20%',   color: '#00cc44' },
       { ticker: 'BRENT',     last: '94.23',  chg: '+6.89',   pct: '+15.00%',  color: '#00cc44' },
       { ticker: 'NAT GAS',   last: '3.264',  chg: '+0.19',   pct: '+6.08%',  color: '#00cc44' },
     ],
@@ -592,14 +592,14 @@ function SectorHeatmap() {
 
 function IGSpreadChart() {
   const sectors = [
-    { name: 'Financials', bps: 18, color: '#ef4444' },
-    { name: 'Utilities',  bps: 12, color: '#ff9900' },
-    { name: 'Energy',     bps: 9,  color: '#f59e0b' },
-    { name: 'Industrials',bps: 5,  color: '#fbbf24' },
+    { name: 'Financials', bps: 17, color: '#ef4444' },
+    { name: 'Utilities',  bps: 22, color: '#ff9900' },
+    { name: 'Energy',     bps: 41, color: '#f59e0b' },
+    { name: 'Industrials',bps: 33, color: '#fbbf24' },
     { name: 'Technology', bps: 2,  color: '#86efac' },
     { name: 'Healthcare', bps: 1,  color: '#86efac' },
   ]
-  const max = 20
+  const max = 50
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-2">
       <div className="flex items-center justify-between">
