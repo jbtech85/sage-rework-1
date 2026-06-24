@@ -36,7 +36,7 @@ export const SageFloatingButton: React.FC<SageFloatingButtonProps> = ({
         <div className={`absolute inset-0 w-14 h-14 ${isAdvisor ? "bg-indigo-500/20" : "bg-emerald-500/20"} rounded-2xl animate-ping opacity-50 group-hover:opacity-75`} />
         {/* Button */}
         <div className="relative w-14 h-14 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl flex items-center justify-center shadow-xl shadow-gray-900/30 hover:shadow-2xl hover:shadow-gray-900/40 hover:-translate-y-0.5 transition-all duration-300">
-          <img src="/Woodgrove-FSI-Logo.png" alt="Woodgrove AI" className="w-9 h-9" />
+          <img src="/Woodgrove-FSI-Logo-Light.png" alt="Woodgrove AI" className="w-9 h-9" />
         </div>
       </div>
     </button>

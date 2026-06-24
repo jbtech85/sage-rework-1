@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Leaf, Settings, LogOut, User, X } from "lucide-react"
+import { Settings, LogOut, User, X } from "lucide-react"
 import type { IRMScene } from "@/lib/irmTypes"
 import { IRMDashboard } from "@/components/frontend/irm/IRMDashboard"
 import { ClientDashboard } from "@/components/frontend/client/ClientDashboard"
@@ -215,7 +215,7 @@ export default function IRMApp() {
         >
           <div className="w-[500px] h-full flex flex-col">
             <div className="bg-indigo-900 text-white px-4 py-3 flex items-center gap-2 flex-shrink-0">
-              <Leaf className="w-4 h-4 text-indigo-300" />
+              <img src="/Woodgrove-FSI-Logo-Light.png" alt="Woodgrove" className="w-6 h-6" />
               <span className="text-sm font-semibold">Woodgrove AI</span>
               <div className="ml-auto flex items-center gap-3">
                 {(scene === 'call-active' || scene === 'call-next-steps') && (
