@@ -16,6 +16,7 @@ import {
   Smartphone,
   Landmark,
   Users,
+  Database,
 } from 'lucide-react'
 
 // ── Bloomberg-style market data widget ────────────────────────────────────────
@@ -229,7 +230,7 @@ const totalAUM = tierStats.reduce((sum, t) => sum + t.aum, 0)
 const tierColors: Record<number, { bar: string; label: string; badge: string }> = {
   1: { bar: 'bg-amber-600',  label: 'text-amber-700',  badge: 'bg-amber-600 border-amber-600 text-white' },
   2: { bar: 'bg-indigo-500', label: 'text-indigo-700', badge: 'bg-indigo-500 border-indigo-500 text-white' },
-  3: { bar: 'bg-violet-500', label: 'text-violet-700', badge: 'bg-violet-500 border-violet-500 text-white' },
+  3: { bar: 'bg-purple-700', label: 'text-purple-700', badge: 'bg-purple-700 border-purple-700 text-white' },
 }
 
 function MetricsRow() {
@@ -337,7 +338,7 @@ function TierKPIBar() {
             </span>
             <div className="min-w-0">
               <div className={`text-sm font-semibold ${tierColors[t.tier].label}`}>${t.aum.toFixed(2)}B</div>
-              <div className="text-xs text-gray-400">{t.count} account{t.count !== 1 ? 's' : ''}</div>
+              <div className="text-xs text-gray-500">{t.count} account{t.count !== 1 ? 's' : ''}</div>
             </div>
           </div>
         ))}
@@ -349,17 +350,37 @@ function TierKPIBar() {
 function GreetingRow({ scene }: { scene: IRMScene }) {
   const isTriage = scene === 'triage'
   return (
-    <div className="flex items-center justify-between mb-6">
-      <h1 className="text-2xl font-semibold text-gray-900">
-        {isTriage ? 'Triage Panel' : 'Good morning, Serena — Accounts Overview'}
-      </h1>
-      <div className="flex items-center gap-2">
-        <span className="bg-indigo-50 text-indigo-700 rounded-full px-3 py-1 text-sm font-medium">
-          $7.42B AUM
-        </span>
-        <span className="bg-gray-100 text-gray-600 rounded-full px-3 py-1 text-sm">
-          10 Active Accounts
-        </span>
+    <div className="mb-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            {isTriage ? 'Triage Panel' : 'Good morning, Serena | Accounts Overview'}
+          </h1>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="bg-indigo-50 text-indigo-700 rounded-full px-3 py-1 text-sm font-medium">
+              $7.42B AUM
+            </span>
+            <span className="bg-gray-100 text-gray-600 rounded-full px-3 py-1 text-sm">
+              10 Active Accounts
+            </span>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 w-80">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <Database className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="text-xs font-semibold text-gray-700">Data Sources</span>
+            </div>
+            <button className="text-xs text-indigo-500 hover:text-indigo-700 border border-indigo-200 hover:border-indigo-400 rounded-md px-2 py-0.5 transition-colors">
+              Edit sources
+            </button>
+          </div>
+          <div className="flex items-center justify-end gap-1.5">
+            <span className="text-xs font-semibold border rounded-md px-2 py-0.5 bg-teal-50 text-teal-700 border-teal-200">LSEG</span>
+            <span className="text-xs font-semibold border rounded-md px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200">Moody's</span>
+            <span className="text-xs font-semibold border rounded-md px-2 py-0.5 bg-red-50 text-red-700 border-red-200">Morningstar</span>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -476,22 +497,11 @@ function CollapsedAlertPill({
   )
 }
 
-// ── Morningstar placeholder charts ────────────────────────────────────────────
-
-function MorningstarBadge() {
-  return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5">
-      Morningstar
-    </span>
-  )
-}
-
 function RateCurveChart() {
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-gray-700">Rate Curve Shift</span>
-        <MorningstarBadge />
       </div>
       <svg viewBox="0 0 260 110" className="w-full" style={{ height: 110 }}>
         {/* Grid lines */}
@@ -547,14 +557,13 @@ function SectorHeatmap() {
     if (v >= 15) return 'bg-red-400'
     if (v >= 10) return 'bg-orange-400'
     if (v >= 5)  return 'bg-yellow-300'
-    return 'bg-green-200'
+    return 'bg-green-300'
   }
 
   return (
     <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-gray-700">IG Spread Heatmap</span>
-        <MorningstarBadge />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-[9px] border-separate border-spacing-0.5">
@@ -581,7 +590,7 @@ function SectorHeatmap() {
         </table>
       </div>
       <div className="flex items-center gap-2 text-[9px] text-gray-400">
-        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-green-200" />1–5bps</span>
+        <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-green-300" />1–5bps</span>
         <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-yellow-300" />5–10bps</span>
         <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-orange-400" />10–15bps</span>
         <span className="flex items-center gap-1"><span className="inline-block w-3 h-2.5 rounded-sm bg-red-400" />15+bps</span>
@@ -604,7 +613,6 @@ function IGSpreadChart() {
     <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-gray-700">IG Spread Widening</span>
-        <MorningstarBadge />
       </div>
       <div className="space-y-1.5 mt-1">
         {sectors.map(({ name, bps, color }) => (
@@ -648,7 +656,7 @@ function SceneDashboard({
       <MarketDataWidget />
 
       {/* Alert banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl mb-4 overflow-hidden">
+      <div className="bg-amber-50 border border-orange-500 rounded-xl mb-4 overflow-hidden">
 
         {/* Header row — always visible */}
         <div className="p-4 flex items-start gap-3">
@@ -657,18 +665,18 @@ function SceneDashboard({
             style={{ animation: 'alertIconPulse 2s ease-in-out infinite' }}
           />
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-amber-900 transition-all duration-300">
+            <div className="font-semibold text-red-900 transition-all duration-300">
               {alertOpen ? MARKET_EVENT.title : 'Market Alert'}
             </div>
             {alertOpen && (
-              <div className="text-sm text-amber-700 mt-0.5">
-                Crude {MARKET_EVENT.crudePctChange} overnight — {MARKET_EVENT.cause}
+              <div className="text-sm text-red-700 mt-0.5">
+                Crude {MARKET_EVENT.crudePctChange} overnight | {MARKET_EVENT.cause}
               </div>
             )}
           </div>
           <button
             onClick={onToggleAlert}
-            className="shrink-0 bg-amber-100 hover:bg-amber-200 active:bg-amber-300 text-amber-800 font-medium text-sm rounded-lg px-4 py-2 transition-colors self-start"
+            className="shrink-0 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-medium text-sm rounded-lg px-4 py-2 transition-colors self-start"
           >
             Review Impact
           </button>
@@ -705,8 +713,13 @@ function SceneDashboard({
             {/* Footer */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-xs text-amber-600">Source: Morningstar market data</span>
-                <span className="text-xs text-gray-400">{MARKET_EVENT.asOfTimestamp}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-500">Sources:</span>
+                  <span className="text-xs font-semibold border rounded-md px-2 py-0.5 bg-teal-50 text-teal-700 border-teal-200">LSEG</span>
+                  <span className="text-xs font-semibold border rounded-md px-2 py-0.5 bg-sky-50 text-sky-700 border-sky-200">S&P</span>
+                  <span className="text-xs font-semibold border rounded-md px-2 py-0.5 bg-red-50 text-red-700 border-red-200">Morningstar</span>
+                </div>
+                <span className="text-xs text-gray-500">{MARKET_EVENT.asOfTimestamp}</span>
               </div>
               <button
                 className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-5 py-2.5 text-sm font-medium transition-colors"
@@ -770,10 +783,13 @@ function SceneAlertExpanded({
           })}
         </div>
 
-        <p className="text-xs text-amber-600 mt-3">
-          Source: Morningstar market data
-        </p>
-        <p className="text-xs text-gray-400">{MARKET_EVENT.asOfTimestamp}</p>
+        <div className="flex items-center gap-1.5 mt-3">
+          <span className="text-xs text-gray-500">Sources:</span>
+          <span className="text-xs font-semibold border rounded-md px-2 py-0.5 bg-teal-50 text-teal-700 border-teal-200">LSEG</span>
+          <span className="text-xs font-semibold border rounded-md px-2 py-0.5 bg-sky-50 text-sky-700 border-sky-200">S&P</span>
+          <span className="text-xs font-semibold border rounded-md px-2 py-0.5 bg-red-50 text-red-700 border-red-200">Morningstar</span>
+        </div>
+        <p className="text-xs text-gray-500">{MARKET_EVENT.asOfTimestamp}</p>
 
         <button
           className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-3 font-medium transition-colors"

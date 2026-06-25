@@ -14,12 +14,12 @@ export const MARKET_EVENT: MarketEvent = {
   cause: 'Middle East supply disruption',
   timestamp: 'Today, 7:42 AM',
   impacts: [
-    'Long-end yields repriced — 10Y +18bps, 30Y +22bps on energy-led inflation expectations',
-    'IG spreads widened across sectors, with financials most exposed',
+    'Long-end yields repriced | 10Y +18bps, 30Y +22bps on energy-led inflation expectations',
+    'IG spreads widened across sectors, with financials, utilities, and energy most exposed',
     'Real asset correlations elevated as energy complex drives cross-asset volatility',
-    'IG liquidity episodic in long-duration paper — phased execution advised',
+    'IG liquidity episodic in long-duration paper | phased execution advised',
   ],
-  asOfTimestamp: 'As of 9:15 AM EST, June 12, 2025',
+  asOfTimestamp: `As of 9:15 AM EST, ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
 }
 
 export const ACCOUNTS: IRMAccount[] = [
@@ -240,7 +240,7 @@ export const CONTOSO_DETAIL: AccountDetail = {
   mandateType: 'Multi-Asset',
   benchmark: 'Custom LDI Blend',
   renewalDays: 30,
-  nextReview: '30 June',
+  nextReview: (() => { const d = new Date(); d.setDate(d.getDate() + 20); return `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'long' })}`  })(),
   netFlow90D: -42,
   allocation: {
     equities: 38,

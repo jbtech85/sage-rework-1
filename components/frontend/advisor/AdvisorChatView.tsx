@@ -148,7 +148,7 @@ function renderTextWithCitations(
 
   const renderInline = (segment: string, keyPrefix: string): React.ReactNode[] => {
     const inlineParts: React.ReactNode[] = []
-    const pattern = /\*\*(.+?)\*\*|(Morningstar)/g
+    const pattern = /\*\*(.+?)\*\*|(LSEG)/g
     let last = 0
     let m: RegExpExecArray | null
     while ((m = pattern.exec(segment)) !== null) {
@@ -156,7 +156,7 @@ function renderTextWithCitations(
       if (m[1]) {
         inlineParts.push(<strong key={`${keyPrefix}-b-${m.index}`}>{m[1]}</strong>)
       } else {
-        inlineParts.push(<span key={`${keyPrefix}-ms-${m.index}`} className="text-red-700 font-medium">Morningstar</span>)
+        inlineParts.push(<span key={`${keyPrefix}-ms-${m.index}`} className="text-teal-700 font-medium">LSEG</span>)
       }
       last = m.index + m[0].length
     }

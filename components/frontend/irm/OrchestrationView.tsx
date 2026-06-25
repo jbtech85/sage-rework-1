@@ -4,7 +4,7 @@ import { useState } from 'react'
 import {
   ChevronLeft, PieChart, Activity, TrendingDown, TrendingUp,
   Clock, AlertCircle, AlertTriangle, CheckCircle2,
-  Phone, Video, Mail, BarChart2, Smartphone, Database, Plus,
+  Phone, Video, Mail, BarChart2, Smartphone,
 } from 'lucide-react'
 import type { IRMScene } from '@/lib/irmTypes'
 import { ACCOUNTS, ACCOUNT_DETAILS } from '@/lib/irmData'
@@ -120,7 +120,7 @@ export function OrchestrationView({
             <TrendingUp className="w-4 h-4 text-green-500" />
           )}
           <span className={`text-sm ${(selectedDetail?.netFlow90D ?? 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-            {selectedDetail ? `${selectedDetail.netFlow90D > 0 ? '+' : ''}$${selectedDetail.netFlow90D}M net flow (90D)` : '—'}
+            {selectedDetail ? 'MTM change -2.5%' : '—'}
           </span>
         </div>
         {selectedDetail?.renewalDays && (
@@ -219,30 +219,6 @@ export function OrchestrationView({
         </div>
       )}
 
-      {/* Data Sources */}
-      <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Database className="w-4 h-4 text-indigo-500" />
-            <span className="font-medium text-gray-900">Data Sources</span>
-          </div>
-          <button className="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 border border-indigo-200 hover:border-indigo-400 rounded-md px-2 py-1 transition-colors">
-            Edit sources
-          </button>
-        </div>
-        <div className="space-y-2.5">
-          {([
-            { name: "Moody's",      color: 'bg-blue-50 text-blue-700 border-blue-100',   desc: 'Credit risk and issuer ratings analytics' },
-            { name: 'Morningstar',  color: 'bg-red-50 text-red-700 border-red-100',       desc: 'Portfolio allocation and performance analytics' },
-            { name: 'LSEG',         color: 'bg-teal-50 text-teal-700 border-teal-100',    desc: 'Real-time market data, yield curves and fixed income pricing' },
-          ] as const).map(({ name, color, desc }) => (
-            <div key={name} className="flex items-center gap-3">
-              <span className={`text-xs font-semibold border rounded-md px-2 py-0.5 shrink-0 ${color}`}>{name}</span>
-              <span className="text-sm text-gray-500">{desc}</span>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Call active indicator */}
       {isCall && (
