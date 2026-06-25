@@ -15,6 +15,8 @@ import {
   Trash2,
   TrendingUp,
   Calendar,
+  BarChart2,
+  SlidersHorizontal,
 } from "lucide-react"
 import type { AdvisorProfile } from "@/lib/types"
 import { PoweredByLabel } from "@/components/frontend/shared/PoweredByLabel"
@@ -81,6 +83,12 @@ const DEMO_PROMPTS: QuickQuery[] = [
   { id: "market-context", label: "What's the market context relevant to Contoso Capital's mandate given today's energy shock?", icon: <TrendingUp className="w-4 h-4" />, prompt: "What's the market context relevant to Contoso Capital's mandate given today's energy shock?", category: "client" },
   { id: "exposure", label: "Show me Contoso's exposure sensitivity and the IC's current positioning on rates and credit.", icon: <Target className="w-4 h-4" />, prompt: "Show me Contoso's exposure sensitivity and the IC's current positioning on rates and credit.", category: "client" },
   { id: "compliance", label: "What are my communications guardrails for this conversation?", icon: <Shield className="w-4 h-4" />, prompt: "What are my communications guardrails for this conversation?", category: "client" },
+]
+
+const FOLLOWUP_PROMPTS: QuickQuery[] = [
+  { id: "portfolio-impact", label: "What is the overall portfolio impact of today's energy shock on Contoso Capital's mandate?", icon: <TrendingUp className="w-4 h-4" />, prompt: "What is the overall portfolio impact of today's energy shock on Contoso Capital's mandate?", category: "client" },
+  { id: "asset-class-impact", label: "How does today's rate and credit repricing affect each of Contoso's asset classes?", icon: <BarChart2 className="w-4 h-4" />, prompt: "How does today's rate and credit repricing affect each of Contoso's asset classes?", category: "client" },
+  { id: "positioning-adjustments", label: "What positioning adjustments would best reduce Contoso's mandate risk given today's market conditions?", icon: <SlidersHorizontal className="w-4 h-4" />, prompt: "What positioning adjustments would best reduce Contoso's mandate risk given today's market conditions?", category: "client" },
 ]
 
 // ─── Mock Responses ─────────────────────────────────────────────────────────
@@ -481,6 +489,10 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
   const usedDemoCount = messages.filter(m =>
     m.role === 'user' && DEMO_PROMPTS.some(p => p.prompt === m.content)
   ).length
+  const usedFollowupCount = messages.filter(m =>
+    m.role === 'user' && FOLLOWUP_PROMPTS.some(p => p.prompt === m.content)
+  ).length
+  const showFollowupChoice = isAccountScene && !isCallScene && usedDemoCount >= DEMO_PROMPTS.length && usedFollowupCount === 0
   const activePrompts = isCallScene
     ? []
     : isAccountScene
@@ -874,6 +886,25 @@ export const AdvisorChatView: React.FC<AdvisorChatViewProps> = ({
                     <p className="text-sm font-medium text-gray-700">{activePrompts[0].label}</p>
                   </div>
                 </button>
+              </div>
+            )}
+            {!isLoading && showFollowupChoice && (
+              <div className="mt-2 mb-4">
+                <p className="text-xs text-indigo-500 font-medium mb-2 ml-1">Suggested follow-up</p>
+                <div className="flex flex-col gap-2">
+                  {FOLLOWUP_PROMPTS.map(q => (
+                    <button
+                      key={q.id}
+                      onClick={() => handleSend(q.prompt)}
+                      className="flex items-center gap-3 p-4 bg-white border border-indigo-200 rounded-xl hover:bg-indigo-50/50 transition-colors text-left w-full"
+                    >
+                      <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 flex-shrink-0">
+                        {q.icon}
+                      </div>
+                      <p className="text-sm font-medium text-gray-700">{q.label}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             <div ref={messagesEndRef} />

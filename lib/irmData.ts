@@ -10,7 +10,7 @@ export const AFFECTED_COUNT = 5
 
 export const MARKET_EVENT: MarketEvent = {
   title: 'Energy Supply Shock',
-  crudePctChange: '+4.2%',
+  crudePctChange: '+16.0%',
   cause: 'Middle East supply disruption',
   timestamp: 'Today, 7:42 AM',
   impacts: [
@@ -362,7 +362,7 @@ export const CALL_SEGMENTS: CallSegment[] = [
       type: 'tracking',
       headline: 'Call started — tracking topics',
       bullets: [
-        'Market event: Energy supply shock, crude +16.2%',
+        'Market event: Energy supply shock, crude +16.0%',
         'Energy-driven inflation expectations repricing long-end rates',
         'Likely topics: duration positioning, sector concentration',
         'Compliance status: Clear',

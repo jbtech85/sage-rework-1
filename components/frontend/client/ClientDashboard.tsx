@@ -82,7 +82,7 @@ export function ClientDashboard() {
               Renewal in {detail.renewalDays} days
             </span>
             <span className="bg-gray-100 text-gray-600 rounded-full px-3 py-1 text-sm">
-              June 12, 2025
+              {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
         </div>
@@ -111,8 +111,8 @@ export function ClientDashboard() {
             iconColor="text-emerald-500"
           />
           <MetricCard
-            title="Net Flow (90D)"
-            value="-$42M"
+            title="MTM Change"
+            value="-2.5%"
             detail="Elevated redemption sensitivity"
             icon={TrendingDown}
             iconBg="bg-red-50"
@@ -131,7 +131,7 @@ export function ClientDashboard() {
         </div>
 
         {/* Market alert — framed for Tim */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl mb-4 overflow-hidden">
+        <div className="bg-amber-50 border border-orange-500 rounded-xl mb-4 overflow-hidden">
           <div className="p-4 flex items-start gap-3">
             <AlertTriangle
               className="w-5 h-5 shrink-0 mt-0.5 text-amber-500"
@@ -156,12 +156,12 @@ export function ClientDashboard() {
                   'IG credit spreads widening — financials & utilities',
                   'Duration band approaching review threshold',
                 ].map(item => (
-                  <span key={item} className="text-xs bg-white border border-amber-200 text-amber-800 rounded-full px-2.5 py-1">
+                  <span key={item} className="text-xs bg-white border border-amber-400 text-amber-800 rounded-full px-2.5 py-1">
                     {item}
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-amber-500 mt-2">{MARKET_EVENT.asOfTimestamp}</p>
+              <p className="text-xs text-gray-500 mt-2">{MARKET_EVENT.asOfTimestamp}</p>
             </div>
           </div>
         </div>
