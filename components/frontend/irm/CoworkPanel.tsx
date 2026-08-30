@@ -1,5 +1,8 @@
 'use client'
 
+// Currently unused: the only trigger for the 'cowork' scene lived in AccountDetailView,
+// which nothing renders anymore. Not reachable through the app's UI as it stands.
+
 import { useState } from 'react'
 import { ChevronLeft, FileText, Mail, Sparkles, CheckCircle2 } from 'lucide-react'
 import { IRMScene } from '@/lib/irmTypes'

@@ -48,6 +48,15 @@ redteam.log
 .vscode/
 .idea/
 
+# Claude Code local settings (personal, machine-specific)
+.claude/settings.local.json
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# pytest cache
+.pytest_cache/
+
 # OS
 .DS_Store
 Thumbs.db
